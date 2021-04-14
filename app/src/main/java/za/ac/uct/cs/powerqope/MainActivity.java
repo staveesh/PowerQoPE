@@ -17,12 +17,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        TextView linkToSettings = findViewById(R.id.link_to_settings);
-        linkToSettings.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
-            startActivity(intent);
-        });
     }
 
     public void onRadioButtonClicked(View view) {
@@ -46,6 +40,8 @@ public class MainActivity extends AppCompatActivity {
             case R.id.radio_advanced:
                 if(checked){
                     Toast.makeText(getApplicationContext(), "Advanced security options selected", Toast.LENGTH_LONG).show();
+                    Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+                    startActivity(intent);
                 }
                 break;
 
