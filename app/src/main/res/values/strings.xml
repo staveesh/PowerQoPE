@@ -1,0 +1,35 @@
+<resources>
+    <string name="app_name">PowerQoPE</string>
+    <string name="welcome_text">Your personal internet security configurator</string>
+    <string name="high_security">High Security</string>
+    <string name="medium_security">Medium Security</string>
+    <string name="low_security">Low Security</string>
+    <string name="advanced_options">Advanced options</string>
+    <string name="cost_info_high">High Security cost information</string>
+    <string name="cost_info_medium">Medium Security cost information</string>
+    <string name="cost_info_low">Low Security cost information</string>
+    <string name="advanced_desc">Select VPN, DNS, Filter, Cipher options</string>
+    <string name="title_activity_settings">SettingsActivity</string>
+
+    <string name="sync_title">Sync email periodically</string>
+    <string name="attachment_title">Download incoming attachments</string>
+    <string name="attachment_summary_on">Automatically download attachments for incoming emails
+    </string>
+    <string name="attachment_summary_off">Only download attachments when manually requested</string>
+    <string-array name="dns_array">
+        <item>Default_Do53</item>
+        <item>Public_Do53</item>
+        <item>DoT</item>
+        <item>DoH</item>
+    </string-array>
+    <string-array name="filtering_array">
+        <item>Value 1</item>
+        <item>Value 2</item>
+        <item>Value 3</item>
+    </string-array>
+    <string-array name="cipher_array">
+        <item>Value 1</item>
+        <item>Value 2</item>
+        <item>Value 3</item>
+    </string-array>
+</resources>

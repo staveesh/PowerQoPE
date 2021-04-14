@@ -1,0 +1,41 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="VPN">
+
+        <CheckBoxPreference
+            app:title="Enable VPN"
+            app:defaultValue="false"
+            app:key="enable_vpn"
+        >
+        </CheckBoxPreference>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="DNS">
+        <DropDownPreference
+            app:key="dns_options"
+            app:title="DNS options"
+            app:entries="@array/dns_array"
+            app:entryValues="@array/dns_array"
+            app:useSimpleSummaryProvider="true"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Filtering">
+        <DropDownPreference
+            app:key="filtering_options"
+            app:title="Filtering options"
+            app:entries="@array/filtering_array"
+            app:entryValues="@array/filtering_array"
+            app:useSimpleSummaryProvider="true"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="Ciphers">
+        <DropDownPreference
+            app:key="cipher_options"
+            app:title="Cipher options"
+            app:entries="@array/cipher_array"
+            app:entryValues="@array/cipher_array"
+            app:useSimpleSummaryProvider="true"/>
+    </PreferenceCategory>
+
+</PreferenceScreen>
