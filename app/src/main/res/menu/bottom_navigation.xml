@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/configure"
+        android:icon="@drawable/ic_settings_foreground"
+        android:title="Configure" />
+    <item
+        android:id="@+id/measure"
+        android:icon="@drawable/ic_measurement_foreground"
+        android:title="Measurements" />
+    <item
+        android:id="@+id/results"
+        android:icon="@drawable/ic_results_foreground"
+        android:title="View Results" />
+</menu>

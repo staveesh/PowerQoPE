@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    android:scrollbarSize="4dp">
+
+    <RadioGroup
+        android:id="@+id/security_options_radio"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_margin="10dp"
+        android:orientation="vertical">
+
+        <RadioButton
+            android:id="@+id/radio_high"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/high_security"
+            android:textSize="24sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/cost_info_high"
+            android:textStyle="bold" />
+
+        <RadioButton
+            android:id="@+id/radio_medium"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/medium_security"
+            android:textSize="24sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/cost_info_medium"
+            android:textStyle="bold" />
+
+        <RadioButton
+            android:id="@+id/radio_low"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/low_security"
+            android:textSize="24sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/cost_info_low"
+            android:textStyle="bold" />
+
+        <RadioButton
+            android:id="@+id/radio_advanced"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/advanced_options"
+            android:textSize="24sp" />
+
+        <TextView
+            android:id="@+id/link_to_settings"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/advanced_desc"
+            android:textStyle="bold" />
+
+    </RadioGroup>
+
+    <Switch
+        android:id="@+id/toggleSettings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="450dp"
+        android:scaleX="3"
+        android:scaleY="3"
+        tools:ignore="UseSwitchCompatOrMaterialXml" />
+
+</RelativeLayout>
