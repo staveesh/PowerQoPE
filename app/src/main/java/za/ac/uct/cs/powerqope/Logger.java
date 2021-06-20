@@ -9,7 +9,7 @@ import android.util.Log;
  */
 public class Logger {
   private final static boolean LOGGING_ENABLED = true;
-  private final static String TAG = "Mobiperf";
+  private final static String TAG = "Measurements";
   
   public static void d(String msg) {
     if (LOGGING_ENABLED) {

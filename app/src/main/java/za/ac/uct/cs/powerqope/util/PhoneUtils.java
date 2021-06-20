@@ -557,7 +557,7 @@ public class PhoneUtils {
     public synchronized void acquireWakeLock() {
         if (wakeLock == null) {
             PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-            wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, " mobiperf:mywakelocktag");
+            wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, " measurements:mywakelocktag");
         }
         Logger.d("PowerLock acquired");
         wakeLock.acquire(10 * 60 * 1000L /*10 minutes*/);//this was recommended

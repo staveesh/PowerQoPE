@@ -144,9 +144,9 @@ public class MeasurementJsonConvertor {
     private static Date parseDate(String dateString) throws ParseException {
         Date parsedDate = dateFormat.parse(dateString);
         if(parsedDate == null)
-            Log.i("Mobiperf", "Parsed date is null");
+            Log.i("Measurements", "Parsed date is null");
         else
-            Log.i("MobiPerf", parsedDate.toString());
+            Log.i("Measurements", parsedDate.toString());
         return parsedDate;
     }
 
