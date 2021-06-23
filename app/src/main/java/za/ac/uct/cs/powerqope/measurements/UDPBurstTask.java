@@ -38,6 +38,7 @@ import za.ac.uct.cs.powerqope.MeasurementError;
 import za.ac.uct.cs.powerqope.MeasurementResult;
 import za.ac.uct.cs.powerqope.MeasurementTask;
 import za.ac.uct.cs.powerqope.Logger;
+import za.ac.uct.cs.powerqope.WebSocketConnector;
 import za.ac.uct.cs.powerqope.util.MeasurementJsonConvertor;
 import za.ac.uct.cs.powerqope.util.PhoneUtils;
 import za.ac.uct.cs.powerqope.util.Util;
@@ -717,7 +718,8 @@ public class UDPBurstTask extends MeasurementTask {
     result.addResult("loss_ratio", 1.0 - response);  
     result.addResult("out_of_order_ratio", udpResult.outOfOrderRatio);
     result.addResult("jitter", udpResult.jitter);
-    Util.sendResult(MeasurementJsonConvertor.toJsonString(result),DESCRIPTOR);
+    WebSocketConnector.getInstance().sendMessage(Config.STOMP_SERVER_JOB_RESULT_ENDPOINT,
+            MeasurementJsonConvertor.toJsonString(result));
     Logger.d("UDP Burst results sending initiated");
     return result;
   }

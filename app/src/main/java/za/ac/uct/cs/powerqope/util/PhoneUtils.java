@@ -20,6 +20,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -39,6 +40,7 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import android.preference.PreferenceManager;
 import android.provider.Settings.Secure;
 import android.telephony.CellInfo;
 import android.telephony.CellInfoCdma;
@@ -78,6 +80,7 @@ import za.ac.uct.cs.powerqope.DeviceInfo;
 import za.ac.uct.cs.powerqope.DeviceProperty;
 import za.ac.uct.cs.powerqope.Logger;
 import za.ac.uct.cs.powerqope.R;
+import za.ac.uct.cs.powerqope.WebSocketConnector;
 
 
 /**
@@ -799,7 +802,13 @@ public class PhoneUtils {
         @Override
         public void onReceive(Context context, Intent intent) {
             updateConnectivityInfo();
-
+            if ("android.net.conn.CONNECTIVITY_CHANGE".equals(intent.getAction())) {
+                WebSocketConnector connector = WebSocketConnector.getInstance();
+                SharedPreferences prefs = context.getSharedPreferences(Config.PREF_KEY_RESOLVED_TARGET, Context.MODE_PRIVATE);
+                String target = prefs.getString(Config.PREF_KEY_RESOLVED_TARGET, null);
+                if(target != null && !connector.isConnected())
+                    connector.connectWebSocket(target);
+            }
         }
     }
 

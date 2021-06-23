@@ -24,6 +24,7 @@ import za.ac.uct.cs.powerqope.MeasurementDesc;
 import za.ac.uct.cs.powerqope.MeasurementError;
 import za.ac.uct.cs.powerqope.MeasurementResult;
 import za.ac.uct.cs.powerqope.MeasurementTask;
+import za.ac.uct.cs.powerqope.WebSocketConnector;
 import za.ac.uct.cs.powerqope.util.MeasurementJsonConvertor;
 import za.ac.uct.cs.powerqope.util.PhoneUtils;
 import za.ac.uct.cs.powerqope.util.Util;
@@ -167,20 +168,23 @@ public class PingTask extends MeasurementTask {
       Logger.i("running ping command");
       // Prevents the phone from going to low-power mode where WiFi turns off
       MeasurementResult result=executePingCmdTask(ipByteLength);
-      Util.sendResult(MeasurementJsonConvertor.toJsonString(result),DESCRIPTOR);
+      WebSocketConnector.getInstance().sendMessage(Config.STOMP_SERVER_JOB_RESULT_ENDPOINT,
+              MeasurementJsonConvertor.toJsonString(result));
       Logger.d("Ping Result sending initiated");
       return result;
     } catch (MeasurementError e) {
       try {
         Logger.i("running java ping");
         MeasurementResult result=executeJavaPingTask();
-        Util.sendResult(MeasurementJsonConvertor.toJsonString(result),DESCRIPTOR);
+        WebSocketConnector.getInstance().sendMessage(Config.STOMP_SERVER_JOB_RESULT_ENDPOINT,
+                MeasurementJsonConvertor.toJsonString(result));
         Logger.d("Java Ping Result sending initiated");
         return result;
       } catch (MeasurementError ee) {
         Logger.i("running http ping");
         MeasurementResult result=executeHttpPingTask();
-        Util.sendResult(MeasurementJsonConvertor.toJsonString(result),DESCRIPTOR);
+        WebSocketConnector.getInstance().sendMessage(Config.STOMP_SERVER_JOB_RESULT_ENDPOINT,
+                MeasurementJsonConvertor.toJsonString(result));
         Logger.d("http Ping Result sending initiated");
         return result;
       }

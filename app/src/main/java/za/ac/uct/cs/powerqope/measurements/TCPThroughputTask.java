@@ -10,6 +10,7 @@ import za.ac.uct.cs.powerqope.MeasurementDesc;
 import za.ac.uct.cs.powerqope.MeasurementError;
 import za.ac.uct.cs.powerqope.MeasurementResult;
 import za.ac.uct.cs.powerqope.MeasurementTask;
+import za.ac.uct.cs.powerqope.WebSocketConnector;
 import za.ac.uct.cs.powerqope.util.MeasurementJsonConvertor;
 import za.ac.uct.cs.powerqope.util.PhoneUtils;
 import za.ac.uct.cs.powerqope.util.Util;
@@ -349,7 +350,7 @@ public class TCPThroughputTask extends MeasurementTask {
     result.addResult("total_data_sent_received",this.totalSendSize+this.totalRevSize );
     String resultJsonString=MeasurementJsonConvertor.toJsonString(result);
     Logger.i(resultJsonString);
-    Util.sendResult(resultJsonString,DESCRIPTOR);
+    WebSocketConnector.getInstance().sendMessage(Config.STOMP_SERVER_JOB_RESULT_ENDPOINT, resultJsonString);
     Logger.d("TCP Result sending initiated");
     return result;
   }

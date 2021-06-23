@@ -29,6 +29,7 @@ import za.ac.uct.cs.powerqope.MeasurementDesc;
 import za.ac.uct.cs.powerqope.MeasurementError;
 import za.ac.uct.cs.powerqope.MeasurementResult;
 import za.ac.uct.cs.powerqope.MeasurementTask;
+import za.ac.uct.cs.powerqope.WebSocketConnector;
 import za.ac.uct.cs.powerqope.util.MeasurementJsonConvertor;
 import za.ac.uct.cs.powerqope.util.PhoneUtils;
 import za.ac.uct.cs.powerqope.util.Util;
@@ -136,7 +137,7 @@ public class DnsLookupTask extends MeasurementTask {
       result.addResult("timeMs", totalTime / successCnt);
       String jsonResultString= MeasurementJsonConvertor.toJsonString(result);
       Logger.i(jsonResultString);
-      Util.sendResult(jsonResultString,DESCRIPTOR);
+      WebSocketConnector.getInstance().sendMessage(Config.STOMP_SERVER_JOB_RESULT_ENDPOINT, jsonResultString);
       Logger.d("DNS Results sending initiated");
       return result;   
     } else {

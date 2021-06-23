@@ -347,7 +347,7 @@ public class MeasurementScheduler extends Service {
     return scheduler;
   }
 
-  private void handleMeasurement() {
+  public void handleMeasurement() {
     try {
       MeasurementTask task = taskQueue.peek();
       // Process the head of the queue.
@@ -787,7 +787,7 @@ public class MeasurementScheduler extends Service {
    * @param newTasks List of MeasurementTasks from the server
    * @param reLoad if it's True, we're loading from disk: don't adjust frequencies or save to disk again.
    */
-  private void updateSchedule(List<MeasurementTask> newTasks, boolean reLoad) {
+  public void updateSchedule(List<MeasurementTask> newTasks, boolean reLoad) {
 
     // Keep track of what tasks need to be added.
     // Altered tasks are removed and then added, so they go here too

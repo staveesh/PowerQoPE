@@ -9,6 +9,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -22,6 +23,7 @@ import androidx.fragment.app.Fragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import za.ac.uct.cs.powerqope.MeasurementScheduler.SchedulerBinder;
+import za.ac.uct.cs.powerqope.util.Util;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -33,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean isBound = false;
     private boolean isBindingToService = false;
     public static final int PERMISSIONS_REQUEST_CODE = 6789;
+    private String target = null;
 
     private ServiceConnection serviceConn = new ServiceConnection() {
         @Override
@@ -85,6 +88,19 @@ public class MainActivity extends AppCompatActivity {
 
         statusBar = findViewById(R.id.systemStatusBar);
         statsBar = findViewById(R.id.systemStatsBar);
+
+        if(target == null) {
+            target = Util.getWebSocketTarget();
+            SharedPreferences prefs = getSharedPreferences(Config.PREF_KEY_RESOLVED_TARGET, MODE_PRIVATE);
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putString(Config.PREF_KEY_RESOLVED_TARGET, target);
+            editor.apply();
+            WebSocketConnector webSocketConnector = WebSocketConnector.getInstance();
+            WebSocketConnector.setContext(getBaseContext());
+            WebSocketConnector.setScheduler(getScheduler());
+            if(!webSocketConnector.isConnected())
+                webSocketConnector.connectWebSocket(target);
+        }
 
         Intent intent = new Intent(this, MeasurementScheduler.class);
         this.startService(intent);

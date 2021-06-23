@@ -23,6 +23,7 @@ import za.ac.uct.cs.powerqope.MeasurementDesc;
 import za.ac.uct.cs.powerqope.MeasurementError;
 import za.ac.uct.cs.powerqope.MeasurementResult;
 import za.ac.uct.cs.powerqope.MeasurementTask;
+import za.ac.uct.cs.powerqope.WebSocketConnector;
 import za.ac.uct.cs.powerqope.util.MeasurementJsonConvertor;
 import za.ac.uct.cs.powerqope.util.PhoneUtils;
 import za.ac.uct.cs.powerqope.util.Util;
@@ -291,7 +292,7 @@ public class TracerouteTask extends MeasurementTask {
             }
             String jsonResultString=MeasurementJsonConvertor.toJsonString(result);
             Logger.i(jsonResultString);
-            Util.sendResult(jsonResultString,DESCRIPTOR);
+            WebSocketConnector.getInstance().sendMessage(Config.STOMP_SERVER_JOB_RESULT_ENDPOINT, jsonResultString);
             return result;
           } else {
             // Otherwise, we aggregate various hosts at a given hop distance for printout
