@@ -22,6 +22,8 @@
 
 package za.ac.uct.cs.powerqope.dns;
 
+import android.util.Log;
+
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
@@ -36,14 +38,15 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.Vector;
 
-import util.ExecutionEnvironment;
-import util.HugePackedSet;
-import util.LRUCache;
-import util.Logger;
-import util.ObjectPackagingManager;
-import util.Utils;
+import za.ac.uct.cs.powerqope.util.ExecutionEnvironment;
+import za.ac.uct.cs.powerqope.util.HugePackedSet;
+import za.ac.uct.cs.powerqope.util.LRUCache;
+import za.ac.uct.cs.powerqope.util.ObjectPackagingManager;
+import za.ac.uct.cs.powerqope.util.Util;
 
 public class BlockedHosts implements Set {
+
+	private static final String TAG = "BlockedHosts";
 
 	private static class MyPackagingManager implements ObjectPackagingManager {
 
@@ -54,12 +57,12 @@ public class BlockedHosts implements Set {
 
 		@Override
 		public Object bytesToObject(byte[] data, int offs) {
-			return Utils.byteArrayToLong(data, offs);
+			return Util.byteArrayToLong(data, offs);
 		}
 
 		@Override
 		public void objectToBytes(Object object, byte[] data, int offs) {
-			Utils.writeLongToByteArray((Long) object, data, offs);
+			Util.writeLongToByteArray((Long) object, data, offs);
 		}
 	}
 
@@ -80,7 +83,7 @@ public class BlockedHosts implements Set {
 		filterListCache = new LRUCache(filterListCacheSize);
 
 		if (ExecutionEnvironment.getEnvironment().debug())
-			Logger.getLogger().logLine("CACHE SIZE:"+okCacheSize+", "+filterListCacheSize);
+			Log.i(TAG, "CACHE SIZE:"+okCacheSize+", "+filterListCacheSize);
 
 		this.hostsFilterOverRule = hostsFilterOverRule;
 
@@ -98,7 +101,7 @@ public class BlockedHosts implements Set {
 		filterListCache = new LRUCache(filterListCacheSize);
 
 		if (ExecutionEnvironment.getEnvironment().debug())
-			Logger.getLogger().logLine("CACHE SIZE:"+okCacheSize+", "+filterListCacheSize);
+			Log.i(TAG, "CACHE SIZE:"+okCacheSize+", "+filterListCacheSize);
 
 		this.hostsFilterOverRule = hostsFilterOverRule;
 	}
@@ -204,7 +207,7 @@ public class BlockedHosts implements Set {
 
 	public void prepareInsert(String host) {
 		if (host.indexOf("*") == -1) //patterns are handled differently
-			blockedHostsHashes.prepareInsert(Utils.getLongStringHash(host.toLowerCase()));
+			blockedHostsHashes.prepareInsert(Util.getLongStringHash(host.toLowerCase()));
 	}
 
 	public void finalPrepare() {
@@ -225,7 +228,7 @@ public class BlockedHosts implements Set {
 
 
 	public void clearCache(String host) {
-		long hostHash = Utils.getLongStringHash((String) host.toLowerCase());
+		long hostHash = Util.getLongStringHash((String) host.toLowerCase());
 		okCache.remove(hostHash);
 		filterListCache.remove(hostHash);
 	}
@@ -237,7 +240,7 @@ public class BlockedHosts implements Set {
 			if (((String) host).indexOf("*") != -1)
 				throw new IOException("Wildcard not supported for update:" + host);
 
-			long hostHash = Utils.getLongStringHash((String) ((String) host).toLowerCase());
+			long hostHash = Util.getLongStringHash((String) ((String) host).toLowerCase());
 			okCache.remove(hostHash);
 			filterListCache.remove(hostHash);
 
@@ -251,7 +254,7 @@ public class BlockedHosts implements Set {
 	@Override
 	public boolean add(Object host) {
 		if (((String) host).indexOf("*") == -1)
-			return blockedHostsHashes.add(Utils.getLongStringHash((String) ((String) host).toLowerCase()));
+			return blockedHostsHashes.add(Util.getLongStringHash((String) ((String) host).toLowerCase()));
 		else { //Pattern
 			getInitializedPatternStruct().addElement( ((String)host).trim().toLowerCase().split("\\*", -1));
 			return true;
@@ -318,7 +321,7 @@ public class BlockedHosts implements Set {
 				ip = true;
 				hostName = hostName.substring(4);
 			}
-			long hosthash = Utils.getLongStringHash(hostName);
+			long hosthash = Util.getLongStringHash(hostName);
 
 			if (okCache.get(hosthash) != null)
 				return false;
@@ -358,7 +361,7 @@ public class BlockedHosts implements Set {
 
 				if (idx != -1) {
 					hostName = hostName.substring(idx + 1);
-					hosthash = Utils.getLongStringHash(hostName);
+					hosthash = Util.getLongStringHash(hostName);
 				}
 			} else idx = -1;
 		}

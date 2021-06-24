@@ -4,8 +4,7 @@ package za.ac.uct.cs.powerqope.dns;
 import java.io.IOException;
 import java.util.Properties;
 
-import dnsfilter.remote.RemoteAccessClient;
-import util.LoggerInterface;
+import za.ac.uct.cs.powerqope.dns.remote.RemoteAccessClient;
 
 public abstract class ConfigurationAccess {
 
@@ -24,8 +23,8 @@ public abstract class ConfigurationAccess {
         return DNSFilterManager.getInstance();
     }
 
-    static public ConfigurationAccess getRemote(LoggerInterface logger, String host, int port, String keyphrase) throws IOException {
-        return new RemoteAccessClient(logger, host, port, keyphrase);
+    static public ConfigurationAccess getRemote(String host, int port, String keyphrase) throws IOException {
+        return new RemoteAccessClient(host, port, keyphrase);
     }
 
     @Override

@@ -34,6 +34,7 @@ import java.net.InetAddress;
 import java.net.SocketAddress;
 import java.util.Hashtable;
 
+import za.ac.uct.cs.powerqope.ip.IPPacket;
 import za.ac.uct.cs.powerqope.ip.UDPPacket;
 import za.ac.uct.cs.powerqope.util.ExecutionEnvironment;
 
@@ -96,7 +97,7 @@ public class DNSResolver implements Runnable {
 			dumpout.write(request.getData(), request.getOffset(), request.getLength());
 			dumpout.flush();
 			dumpout.close();
-			Log.e(TAG, "resolveLocal: ", );
+			Log.e(TAG, "resolveLocal: "+e);
 			throw new IOException(e);
 		}
 
@@ -114,30 +115,30 @@ public class DNSResolver implements Runnable {
 		String host = (String) info[0];
 		byte[] ip = null;
 		String prfx = ">4";
-		byte[] filterIP = dnsfilter.DNSResponsePatcher.ipv4_blocked;
+		byte[] filterIP = DNSResponsePatcher.ipv4_blocked;
 		if (type == 28) {
 			prfx = ">6";
-			filterIP = dnsfilter.DNSResponsePatcher.ipv6_blocked;
+			filterIP = DNSResponsePatcher.ipv6_blocked;
 		}
 
 		if (customIPMappings != null)
 			ip = customIPMappings.get(prfx+host.toLowerCase());
-		if (ip == null && dnsfilter.DNSResponsePatcher.filter(host, false)) {
-			dnsfilter.DNSResponsePatcher.logNstats(true, host);
+		if (ip == null && DNSResponsePatcher.filter(host, false)) {
+			DNSResponsePatcher.logNstats(true, host);
 			ip = filterIP;
 		}
 		if (ip != null) {
 
-			dnsfilter.DNSResponsePatcher.trafficLog(client,clss,type,host,null,0);
+			DNSResponsePatcher.trafficLog(client,clss,type,host,null,0);
 			int length = dnsQuery.produceResponse(response.getData(), response.getOffset(), ip, localResolverTTL);
 			response.setLength(length);
 
 			String addrStr = InetAddress.getByAddress(ip).getHostAddress().toString();
 
-			dnsfilter.DNSResponsePatcher.trafficLog(client,clss,type,host, addrStr, ip.length);
+			DNSResponsePatcher.trafficLog(client,clss,type,host, addrStr, ip.length);
 
 			if (ip != filterIP)
-				Logger.getLogger().logLine("MAPPED_CUSTOM_IP: "+host+"->"+addrStr);
+				Log.i(TAG,"MAPPED_CUSTOM_IP: "+host+"->"+addrStr);
 			
 			return true;
 		} else
@@ -172,7 +173,7 @@ public class DNSResolver implements Runnable {
 			DNSCommunicator.getInstance().requestDNS(request, response);
 
 			// patch the response by applying filter
-			byte[] buf = dnsfilter.DNSResponsePatcher.patchResponse(clientID, response.getData(), offs);
+			byte[] buf = DNSResponsePatcher.patchResponse(clientID, response.getData(), offs);
 		}
 
 		//create  UDP Header and update source and destination IP and port			
@@ -202,7 +203,7 @@ public class DNSResolver implements Runnable {
 			DNSCommunicator.getInstance().requestDNS(dataGramRequest, response);
 
 			// patch the response by applying filter
-			dnsfilter.DNSResponsePatcher.patchResponse(clientID, response.getData(), response.getOffset());
+			DNSResponsePatcher.patchResponse(clientID, response.getData(), response.getOffset());
 		}
 
 		//finally return the response to the request source
@@ -226,19 +227,19 @@ public class DNSResolver implements Runnable {
 		} catch (IOException e) {
 			boolean hasNetwork = ExecutionEnvironment.getEnvironment().hasNetwork();
 			if (!hasNetwork)
-				Logger.getLogger().message("No network!");
+				Log.i(TAG, "No network!");
 			String msg = e.getMessage();
 			if (e.getMessage()==null)
 				msg = e.toString();
 			if (ExecutionEnvironment.getEnvironment().debug())
-				Logger.getLogger().logLine(msg);
+				Log.i(TAG,msg);
 			else if (!IO_ERROR && hasNetwork) {
 				// a new IO Error while connected occured
-				Logger.getLogger().logLine(msg+"\nIO Error occured! Check network or DNS config!");
+				Log.i(TAG, msg+"\nIO Error occured! Check network or DNS config!");
 				IO_ERROR= true; //prevent repeating error logs
 			}
 		} catch (Exception e) {
-			Logger.getLogger().logException(e);
+			Log.e(TAG, ""+e);
 		} finally {
 			synchronized (CNT_SYNC) {
 				THR_COUNT--;

@@ -23,6 +23,8 @@ package za.ac.uct.cs.powerqope.dns;
  */
 
 
+import android.util.Log;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.DatagramPacket;
@@ -33,14 +35,12 @@ import java.net.UnknownHostException;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-import util.ExecutionEnvironment;
-import util.GroupedLogger;
-import util.Logger;
-import util.LoggerInterface;
-import util.SuppressRepeatingsLogger;
+import za.ac.uct.cs.powerqope.util.ExecutionEnvironment;
+import za.ac.uct.cs.powerqope.util.SuppressRepeatingsLogger;
 
 public class DNSFilterProxy implements Runnable {
 
+	private static final String TAG = "DNSFilterProxy";
 	DatagramSocket receiver;
 	boolean stopped = false;
 	int port = 53;
@@ -49,35 +49,35 @@ public class DNSFilterProxy implements Runnable {
 		this.port = port;
 	}
 
-	private static void initDNS(dnsfilter.DNSFilterManager dnsFilterMgr) {
+	private static void initDNS(DNSFilterManager dnsFilterMgr) {
 		try {
 
 			boolean detect = Boolean.parseBoolean(dnsFilterMgr.getConfig().getProperty("detectDNS", "true"));
 			if (detect) {
-				Logger.getLogger().logLine("DNS detection not supported for this device");
-				Logger.getLogger().message("DNS detection not supported - Using fallback!");
+				Log.i(TAG,"DNS detection not supported for this device");
+				Log.i(TAG,"DNS detection not supported - Using fallback!");
 			}
-			Vector<dnsfilter.DNSServer> dnsAdrs = new Vector<dnsfilter.DNSServer>();
+			Vector<DNSServer> dnsAdrs = new Vector<DNSServer>();
 			int timeout = Integer.parseInt(dnsFilterMgr.getConfig().getProperty("dnsRequestTimeout", "15000"));
 
 			StringTokenizer fallbackDNS = new StringTokenizer(dnsFilterMgr.getConfig().getProperty("fallbackDNS", ""), ";");
 			int cnt = fallbackDNS.countTokens();
 			for (int i = 0; i < cnt; i++) {
 				String dnsEntry = fallbackDNS.nextToken().trim();
-				Logger.getLogger().logLine("DNS:" + dnsEntry);
+				Log.i(TAG,"DNS:" + dnsEntry);
 				try {
-					dnsAdrs.add(dnsfilter.DNSServer.getInstance().createDNSServer(dnsEntry, timeout));
+					dnsAdrs.add(DNSServer.getInstance().createDNSServer(dnsEntry, timeout));
 				} catch (IOException e) {
-					Logger.getLogger().logException(e);
+					Log.e(TAG, e.getMessage());
 				}
 			}
-			dnsfilter.DNSCommunicator.getInstance().setDNSServers(dnsAdrs.toArray(new dnsfilter.DNSServer[dnsAdrs.size()]));
+			DNSCommunicator.getInstance().setDNSServers(dnsAdrs.toArray(new DNSServer[dnsAdrs.size()]));
         } catch (IOException e) {
-            Logger.getLogger().logLine("!!!DNS server initialization failed!!!");
-            Logger.getLogger().logLine(e.toString());
-            Logger.getLogger().message(e.getMessage());
+            Log.i(TAG,"!!!DNS server initialization failed!!!");
+            Log.i(TAG,e.toString());
+            Log.i(TAG,e.getMessage());
         } catch (Exception e) {
-            Logger.getLogger().logException(e);
+            Log.e(TAG, e.getMessage());
         }
 	}
 
@@ -92,9 +92,9 @@ public class DNSFilterProxy implements Runnable {
 			public boolean debug() {
 				if (!debugInit) {
 					try {
-						debug = Boolean.parseBoolean(dnsfilter.DNSFilterManager.getInstance().getConfig().getProperty("debug", "false"));
+						debug = Boolean.parseBoolean(DNSFilterManager.getInstance().getConfig().getProperty("debug", "false"));
 					} catch (IOException e) {
-						Logger.getLogger().logException(e);
+						Log.e(TAG, e.getMessage());
 					}
 					debugInit=true;
 				}
@@ -104,7 +104,7 @@ public class DNSFilterProxy implements Runnable {
 
 			@Override
 			public void onReload() {
-				DNSFilterProxy.initDNS(dnsfilter.DNSFilterManager.getInstance());
+				DNSFilterProxy.initDNS(DNSFilterManager.getInstance());
 			}
 
 			@Override
@@ -113,52 +113,18 @@ public class DNSFilterProxy implements Runnable {
 			}
 
 		}
-
-		class StandaloneLogger  implements LoggerInterface {
-
-			@Override
-			public void logLine(String txt) {
-				System.out.println(txt);
-			}
-
-			@Override
-			public void logException(Exception e) {
-				e.printStackTrace();
-			}
-
-			@Override
-			public void log(String txt) {
-				System.out.print(txt);
-
-			}
-
-			@Override
-			public void message(String txt) {
-				logLine(txt);
-			}
-
-			@Override
-			public void closeLogger() {
-
-			}
-
-		}
-
-
-		SuppressRepeatingsLogger myLogger = new SuppressRepeatingsLogger(new StandaloneLogger());
-		Logger.setLogger(new GroupedLogger(new LoggerInterface[] {myLogger}));
-		ExecutionEnvironment.setEnvironment(new StandaloneEnvironment());
-		dnsfilter.DNSFilterManager.WORKDIR = ExecutionEnvironment.getEnvironment().getWorkDir();
 		
-		dnsfilter.DNSFilterManager filtermgr = dnsfilter.DNSFilterManager.getInstance();
+		ExecutionEnvironment.setEnvironment(new StandaloneEnvironment());
+		DNSFilterManager.WORKDIR = ExecutionEnvironment.getEnvironment().getWorkDir();
+		
+		DNSFilterManager filtermgr = DNSFilterManager.getInstance();
 		filtermgr.init();
 
-		long repeatingLogSuppressTime = Long.parseLong(dnsfilter.DNSFilterManager.getInstance().getConfig().getProperty("repeatingLogSuppressTime", "1000"));
-		myLogger.setSuppressTime(repeatingLogSuppressTime);
+		long repeatingLogSuppressTime = Long.parseLong(DNSFilterManager.getInstance().getConfig().getProperty("repeatingLogSuppressTime", "1000"));
 
 		initDNS(filtermgr);
 
-		int port = Integer.parseInt(dnsfilter.DNSFilterManager.getInstance().getConfig().getProperty("dnsProxyPortNonAndroid","53"));
+		int port = Integer.parseInt(DNSFilterManager.getInstance().getConfig().getProperty("dnsProxyPortNonAndroid","53"));
 		DNSFilterProxy runner = new DNSFilterProxy(port);
 
 		runner.run();
@@ -170,7 +136,7 @@ public class DNSFilterProxy implements Runnable {
 		try {
 			openVPN4pDNSf_Adr = InetAddress.getByName("10.10.10.10");
 		} catch (UnknownHostException e) {
-			Logger.getLogger().logException(e);
+			Log.e(TAG, e.getMessage());
 		}
 	}
 
@@ -188,12 +154,12 @@ public class DNSFilterProxy implements Runnable {
 		boolean onlyLocal;
 		boolean androidRootMode;
 		try {
-			max_resolvers  = Integer.parseInt(dnsfilter.DNSFilterManager.getInstance().getConfig().getProperty("maxResolverCount", "100"));
-			onlyLocal = Boolean.parseBoolean(dnsfilter.DNSFilterManager.getInstance().getConfig().getProperty("dnsProxyOnlyLocalRequests", "true"));
-			androidRootMode = Boolean.parseBoolean(dnsfilter.DNSFilterManager.getInstance().getConfig().getProperty("rootModeOnAndroid", "false"));
+			max_resolvers  = Integer.parseInt(DNSFilterManager.getInstance().getConfig().getProperty("maxResolverCount", "100"));
+			onlyLocal = Boolean.parseBoolean(DNSFilterManager.getInstance().getConfig().getProperty("dnsProxyOnlyLocalRequests", "true"));
+			androidRootMode = Boolean.parseBoolean(DNSFilterManager.getInstance().getConfig().getProperty("rootModeOnAndroid", "false"));
 		} catch (Exception e) {
-			Logger.getLogger().logLine("Exception:Cannot get configuration!");
-			Logger.getLogger().logException(e);
+			Log.i(TAG,"Exception:Cannot get configuration!");
+			Log.e(TAG, e.getMessage());
 			return;
 		}
 		try {
@@ -206,15 +172,15 @@ public class DNSFilterProxy implements Runnable {
 			ExecutionEnvironment.getEnvironment().protectSocket(receiver, 1);
 
 		} catch (IOException eio) {
-			Logger.getLogger().logLine("Exception:Cannot open DNS port " + port + "!" + eio.getMessage());
+			Log.i(TAG,"Exception:Cannot open DNS port " + port + "!" + eio.getMessage());
 			return;
 		}
-		Logger.getLogger().logLine("DNSFilterProxy running on port " + port + "!");
+		Log.i(TAG,"DNSFilterProxy running on port " + port + "!");
 
 		while (!stopped) {
 			try {
-				byte[] data = new byte[dnsfilter.DNSServer.getBufSize()];
-				DatagramPacket request = new DatagramPacket(data, 0, dnsfilter.DNSServer.getBufSize());
+				byte[] data = new byte[DNSServer.getBufSize()];
+				DatagramPacket request = new DatagramPacket(data, 0, DNSServer.getBufSize());
 				receiver.receive(request);
 
 				boolean permitted = true;
@@ -225,20 +191,20 @@ public class DNSFilterProxy implements Runnable {
 					permitted = isAlocalAddress(request.getAddress());
 
 				if (!permitted)
-					Logger.getLogger().logLine(request.getAddress()+" not permitted! Only local access!");
+					Log.i(TAG,request.getAddress()+" not permitted! Only local access!");
 
-				if (dnsfilter.DNSResolver.getResolverCount()>max_resolvers) {
-					Logger.getLogger().message("Max resolver count reached: "+max_resolvers);
+				if (DNSResolver.getResolverCount()>max_resolvers) {
+					Log.i(TAG,"Max resolver count reached: "+max_resolvers);
 				}
 				else if (permitted)
-					new Thread(new dnsfilter.DNSResolver(request, receiver)).start();
+					new Thread(new DNSResolver(request, receiver)).start();
 
 			} catch (IOException e) {
 				if (!stopped)
-					Logger.getLogger().logLine("Exception:" + e.getMessage());
+					Log.i(TAG,"Exception:" + e.getMessage());
 			}
 		}
-		Logger.getLogger().logLine("DNSFilterProxy stopped!");
+		Log.i(TAG,"DNSFilterProxy stopped!");
 	}
 
 

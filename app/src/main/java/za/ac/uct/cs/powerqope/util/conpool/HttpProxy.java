@@ -28,8 +28,8 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.Socket;
 
-import util.ExecutionEnvironment;
-import util.http.HttpHeader;
+import za.ac.uct.cs.powerqope.util.ExecutionEnvironment;
+import za.ac.uct.cs.powerqope.util.http.HttpHeader;
 
 public class HttpProxy extends Proxy {
 	private String authString;
@@ -58,7 +58,7 @@ public class HttpProxy extends Proxy {
 		else
 			host = adr.getHostName();	//IP will be resolved by Proxy	
 			
-		HttpHeader header = new HttpHeader(HttpHeader.REQUEST_HEADER);	
+		HttpHeader header = new HttpHeader(HttpHeader.REQUEST_HEADER);
 		header.setRequest("CONNECT "+host+":"+adr.getPort()+" HTTP/1.1");
 		if (authString != null)
 			header.setValue("Proxy-Authorization", authString);

@@ -30,7 +30,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
 
-import util.Utils;
+import za.ac.uct.cs.powerqope.util.Util;
 
 public class HttpHeader {
 
@@ -74,7 +74,7 @@ public class HttpHeader {
 
 		this.type = type;
 
-		_first = Utils.readLineFromStream(in,true);
+		_first = Util.readLineFromStream(in,true);
 		if (type == REQUEST_HEADER) {
 			parseURI();
 			if (hostEntry != null)
@@ -95,7 +95,7 @@ public class HttpHeader {
 				throw new IOException("Invalid response header:" + _first);
 		}
 
-		String next = Utils.readLineFromStream(in,true);
+		String next = Util.readLineFromStream(in,true);
 		String key;
 		String value;
 		while (!next.equals("")) {
@@ -126,7 +126,7 @@ public class HttpHeader {
 				} else if (!curVal.equals(value))
 					throw new IOException("Invalid header! Duplicated Content-Length with different values:" + curVal + "<>" + value + "!");
 			}
-			next = Utils.readLineFromStream(in,true);
+			next = Util.readLineFromStream(in,true);
 		}
 		if (hostEntry == null && type == REQUEST_HEADER) {
 			hostEntry = getValue("Host");

@@ -86,4 +86,40 @@
     <string name="app_description">This application collects the usage data of apps from your phone at regular intervals and sends it to a server for the purpose of academic research. All information being sent to the server is anonymized and researchers in no way can associate the collected data with your identity. </string>
     <string name="helpicon">helpIcon</string>
     <string name="help_image">Help Image</string>
+    <string name="listenPortLabel">Port:</string>
+    <string name="startBtnLabel">Restart</string>
+    <string name="stopBtnLabel">Close</string>
+    <string name="filterReloadBtnLabel">Reload filter</string>
+    <string name="EnableConfigCheckBox">Advanced settings</string>
+    <string name="editFilterLoadCheckBox">Configure filter update</string>
+    <string name="editAdditionalHostsCheckBox">Configure additional hosts</string>
+    <string name="appWhitelistCheckBox">App whitelist</string>
+    <string name="keepAwakeCheckBox">Prevent device sleep</string>
+    <string name="EnableAutoStart">Autostart</string>
+    <string name="EnableAdfilter">Enable blocking</string>
+    <string name="dnsLabel">DNS:</string>
+    <string name="manualDNSCheck">Disable DNS server discovery - manual DNS servers below:</string>
+    <string name="dnsCfgConfigDialogTitle">DNS server configuration</string>
+    <string name="filterUpdateDays">Filter update interval in days:</string>
+    <string name="active">Active</string>
+    <string name="shortText">Short text</string>
+    <string name="URL" translatable="false">URL</string>
+    <string name="cfgBackupRestore">Backup and restore</string>
+    <string name="backupConfig">Backup configuration</string>
+    <string name="restoreBackup">Restore backup</string>
+    <string name="restoreDefault">Restore default configuration</string>
+    <string name="cnameCloakingConfig">CNAME cloaking protection (aggressive)</string>
+    <string name="category">Category</string>
+    <string name="name">Name</string>
+    <string name="left" translatable="false">◀</string>
+    <string name="right" translatable="false">▶</string>
+    <string name="editFilterDialogTitle">Edit filter</string>
+    <string name="addFilter">"Add filter"</string>
+    <string name="removeFilter">"Remove filter"</string>
+    <string name="proxyModeCheckBox">DNS proxy mode without local VPN</string>
+    <string name="rootModeCheckBox">Root mode without local VPN</string>
+    <string name="proxyLocalOnlyCheckbox">Allow only local DNS proxy requests</string>
+    <string name="notificationActive">Active</string>
+    <string name="notificationPaused">Paused</string>
+    <string name="switch_pause_resume">Tap to switch</string>
 </resources>

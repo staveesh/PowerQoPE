@@ -21,23 +21,24 @@
  */
 package za.ac.uct.cs.powerqope.dns;
 
+import android.util.Log;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.util.Date;
 
-import util.ExecutionEnvironment;
-import util.Logger;
-import util.Utils;
+import za.ac.uct.cs.powerqope.util.ExecutionEnvironment;
+import za.ac.uct.cs.powerqope.util.Util;
 
 public class DNSCommunicator {
-
+	private static final String TAG = "DNSCommunicator";
 	private static DNSCommunicator INSTANCE = new DNSCommunicator();
 
 	private static int TIMEOUT = 12000;
-	dnsfilter.DNSServer[] dnsServers = new dnsfilter.DNSServer[0];
-	dnsfilter.DNSServer[] currentCheckingDNServers;
+	DNSServer[] dnsServers = new DNSServer[0];
+	DNSServer[] currentCheckingDNServers;
 	int curDNS = -1;
 	String lastDNS = "";
 
@@ -46,7 +47,7 @@ public class DNSCommunicator {
 		return INSTANCE;
 	}
 
-	public synchronized void setDNSServers(dnsfilter.DNSServer[] newDNSServers) throws IOException {
+	public synchronized void setDNSServers(DNSServer[] newDNSServers) throws IOException {
 
 		if (newDNSServers.length > 20)
 			throw new IOException ("Too many DNS servers configured - Add max 20!");
@@ -61,11 +62,11 @@ public class DNSCommunicator {
 			curDNS = -1;
 		}
 		if (ExecutionEnvironment.getEnvironment().debug())
-			Logger.getLogger().logLine("Using updated DNS servers!");
+			Log.i(TAG,"Using updated DNS servers!");
 	}
 
 	private void setFastestDNSFromServers(final boolean acceptCurrent)  {
-		final dnsfilter.DNSServer[] dnsServersCopy;
+		final DNSServer[] dnsServersCopy;
 		final int[] curDNSCopy = new int[1];
 		final FileOutputStream[] dnsPerfOut = new FileOutputStream[1];
 
@@ -76,7 +77,7 @@ public class DNSCommunicator {
 			}
 			try {
 
-				if (currentCheckingDNServers != null && Utils.arrayEqual(currentCheckingDNServers, this.dnsServers))
+				if (currentCheckingDNServers != null && Util.arrayEqual(currentCheckingDNServers, this.dnsServers))
 					return; // already triggered!
 
 				File dnsPerfFile= new File(ExecutionEnvironment.getEnvironment().getWorkDir()+"dnsperf.info");
@@ -86,10 +87,10 @@ public class DNSCommunicator {
 				} else
 					throw new IOException("Current file cannot be overwritten!");
 			} catch (IOException eio) {
-				Logger.getLogger().logLine("Can't create dnsperf.info file!\n"+eio);
+				Log.i(TAG,"Can't create dnsperf.info file!\n"+eio);
 			}
 			curDNSCopy[0] = curDNS;
-			dnsServersCopy = new dnsfilter.DNSServer[this.dnsServers.length];
+			dnsServersCopy = new DNSServer[this.dnsServers.length];
 			for (int i = 0; i < this.dnsServers.length; i++)
 				dnsServersCopy[i]= this.dnsServers[i];
 
@@ -126,7 +127,7 @@ public class DNSCommunicator {
 				for (int i = 0; i < dnsServersCopy.length; i++) {
 					final int finalI = i;
 					new Thread(new Runnable() {
-						dnsfilter.DNSServer dnsServer = dnsServersCopy[finalI];
+						DNSServer dnsServer = dnsServersCopy[finalI];
 						int dnsIdx = finalI;
 
 						public void writeDNSPerfInfo(String txt) {
@@ -134,7 +135,7 @@ public class DNSCommunicator {
 								if (dnsPerfOut[0]!=null)
 									dnsPerfOut[0].write(txt.getBytes());
 							} catch (IOException eio) {
-								Logger.getLogger().logLine("Can't write dnsperf.info file!\n"+eio);
+								Log.i(TAG,"Can't write dnsperf.info file!\n"+eio);
 							}
 						}
 
@@ -153,7 +154,7 @@ public class DNSCommunicator {
 								long result = dnsServer.testDNS(5);
 
 								synchronized (monitor) {
-									//Logger.getLogger().logLine(dnsServer+": "+result+"ms");
+									//Log.i(TAG,dnsServer+": "+result+"ms");
 									writeDNSPerfInfo(dnsServer+": "+result+"ms\r\n");
 
 									if (!fastestFound) {
@@ -161,13 +162,13 @@ public class DNSCommunicator {
 											curDNSCopy[0] = dnsIdx;
 											terminated(true);
 										} else {
-											Logger.getLogger().logLine(dnsServer+" already set! Preferring different one!");
+											Log.i(TAG,dnsServer+" already set! Preferring different one!");
 											terminated(false);
 										}
 									} else terminated(false);
 								}
 							} catch (IOException eio) {
-								//Logger.getLogger().logLine(dnsServer+": "+eio.getMessage());
+								//Log.i(TAG,dnsServer+": "+eio.getMessage());
 								writeDNSPerfInfo(dnsServer+"; "+eio.getMessage()+"\r\n");
 								terminated(false);
 							}
@@ -196,14 +197,14 @@ public class DNSCommunicator {
 					// Take over result in case no other DNS Serverlist change was in between
 					synchronized (INSTANCE) {
 
-						if (Utils.arrayEqual(dnsServersCopy, dnsServers)) {
+						if (Util.arrayEqual(dnsServersCopy, dnsServers)) {
 
 							currentCheckingDNServers = null;
 
 							curDNS = curDNSCopy[0];
 
 							if (curDNS != -1) {
-								Logger.getLogger().logLine("Selected DNS: (" + dnsServersCopy[curDNS].lastPerformance + "ms) " + dnsServersCopy[curDNS]);
+								Log.i(TAG,"Selected DNS: (" + dnsServersCopy[curDNS].lastPerformance + "ms) " + dnsServersCopy[curDNS]);
 								lastDNS = dnsServers[curDNS].toString();
 							}
 						}
@@ -226,7 +227,7 @@ public class DNSCommunicator {
 							dnsPerfOut[0].flush();
 							dnsPerfOut[0].close();
 						} catch (IOException eio) {
-							Logger.getLogger().logLine("Can't close dnsperf.info file!\n"+eio);
+							Log.i(TAG,"Can't close dnsperf.info file!\n"+eio);
 						}
 					}
 				}
@@ -234,16 +235,16 @@ public class DNSCommunicator {
 		}).start();
 	}
 
-	private synchronized void switchDNSServer(dnsfilter.DNSServer current) throws IOException {
+	private synchronized void switchDNSServer(DNSServer current) throws IOException {
 		if (current == getCurrentDNS()) {  //might have been switched by other thread already
 			//curDNS = (curDNS + 1) % dnsServers.length;
 			setFastestDNSFromServers(false);
 			if (ExecutionEnvironment.getEnvironment().debug())
-				Logger.getLogger().logLine("Switched DNS server to:" + getCurrentDNS().getAddress().getHostAddress());
+				Log.i(TAG,"Switched DNS server to:" + getCurrentDNS().getAddress().getHostAddress());
 		}
 	}
 
-	public synchronized dnsfilter.DNSServer getCurrentDNS() throws IOException {
+	public synchronized DNSServer getCurrentDNS() throws IOException {
 		if (dnsServers.length == 0)
 			throw new IOException("No DNS server initialized!");
 		else {
@@ -258,7 +259,7 @@ public class DNSCommunicator {
 
 	public void requestDNS(DatagramPacket request, DatagramPacket response) throws IOException {
 
-		dnsfilter.DNSServer dns = getCurrentDNS();
+		DNSServer dns = getCurrentDNS();
 
 		try {
 			//DNSServer.getInstance().createDNSServer(DNSServer.UDP,dns,53,TIMEOUT, null).resolve(request, response);

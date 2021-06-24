@@ -1,6 +1,7 @@
 package za.ac.uct.cs.powerqope;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -11,9 +12,12 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.net.VpnService;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
+import android.util.TypedValue;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -22,10 +26,16 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
+import java.util.Properties;
+
 import za.ac.uct.cs.powerqope.MeasurementScheduler.SchedulerBinder;
+import za.ac.uct.cs.powerqope.dns.ConfigurationAccess;
+import za.ac.uct.cs.powerqope.dns.DNSFilterService;
 import za.ac.uct.cs.powerqope.util.Util;
 
 public class MainActivity extends AppCompatActivity {
+
+    private static final String TAG = "MainActivity";
 
     TextView statusBar, statsBar;
 
@@ -36,6 +46,10 @@ public class MainActivity extends AppCompatActivity {
     private boolean isBindingToService = false;
     public static final int PERMISSIONS_REQUEST_CODE = 6789;
     private String target = null;
+    private static String WORKDIR;
+    protected static ConfigurationAccess CONFIG = ConfigurationAccess.getLocal();
+    protected static Properties config = null;
+    protected static boolean switchingConfig = false;
 
     private ServiceConnection serviceConn = new ServiceConnection() {
         @Override
@@ -74,6 +88,84 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(this, MeasurementScheduler.class);
             bindService(intent, serviceConn, Context.BIND_AUTO_CREATE);
             isBindingToService = true;
+        }
+    }
+
+    public static void initEnvironment(Context context) {
+        if (android.os.Build.VERSION.SDK_INT >= 19) {
+            context.getExternalFilesDirs(null); //Seems on some devices this has to be called once before accessing Files...
+            WORKDIR = context.getExternalFilesDirs (null)[0].getAbsolutePath() + "/DNSFilter";
+        }
+        else
+            WORKDIR= Environment.getExternalStorageDirectory().getAbsolutePath() + "/DNSFilter";
+    }
+
+    public static void reloadLocalConfig() {
+        if (app != null && CONFIG.isLocal())
+            app.loadAndApplyConfig(false);
+    }
+
+    protected void loadAndApplyConfig(boolean startApp) {
+
+        config = getConfig();
+
+        if (config != null) {
+
+            if (startApp)
+                startup();
+
+        } else
+            switchingConfig =false;
+    }
+
+    protected void startup() {
+
+        if (DNSFilterService.SERVICE != null) {
+            Log.i(TAG, "DNS filter service is running!");
+            Log.i(TAG, "Filter statistic since last restart:");
+            return;
+        }
+
+        try {
+            boolean vpnInAdditionToProxyMode = Boolean.parseBoolean(getConfig().getProperty("vpnInAdditionToProxyMode", "false"));
+            boolean vpnDisabled = !vpnInAdditionToProxyMode && Boolean.parseBoolean(getConfig().getProperty("dnsProxyOnAndroid", "false"));
+            Intent intent = null;
+            if (!vpnDisabled)
+                intent = VpnService.prepare(this.getApplicationContext());
+            if (intent != null) {
+                startActivityForResult(intent, 0);
+            } else { //already prepared or VPN disabled
+                startDNSSvc();
+            }
+        } catch (NullPointerException e) { // NullPointer might occur on Android 4.4 when VPN already initialized
+            Log.i(TAG, "Seems we are on Android 4.4 or older!");
+            startDNSSvc(); // assume it is ok!
+        } catch (Exception e) {
+            Log.e(TAG, e.getMessage());
+        }
+
+    }
+
+    private void startDNSSvc() {
+        startService(new Intent(this, DNSFilterService.class));
+    }
+
+    protected Properties getConfig() {
+        try {
+            return CONFIG.getConfig();
+        } catch (Exception e){
+            Log.e(TAG, e.toString());
+            return null;
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 0 && resultCode == Activity.RESULT_OK) {
+            startDNSSvc();
+        } else if (requestCode == 0 && resultCode != Activity.RESULT_OK) {
+            Log.e(TAG, "VPN dialog not accepted!\r\nPress restart to display dialog again!");
         }
     }
 

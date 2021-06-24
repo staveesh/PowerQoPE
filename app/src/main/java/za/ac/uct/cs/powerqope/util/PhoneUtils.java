@@ -81,6 +81,7 @@ import za.ac.uct.cs.powerqope.DeviceProperty;
 import za.ac.uct.cs.powerqope.Logger;
 import za.ac.uct.cs.powerqope.R;
 import za.ac.uct.cs.powerqope.WebSocketConnector;
+import za.ac.uct.cs.powerqope.dns.DNSFilterService;
 
 
 /**
@@ -808,6 +809,11 @@ public class PhoneUtils {
                 String target = prefs.getString(Config.PREF_KEY_RESOLVED_TARGET, null);
                 if(target != null && !connector.isConnected())
                     connector.connectWebSocket(target);
+                try {
+                    DNSFilterService.possibleNetworkChange(false);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }

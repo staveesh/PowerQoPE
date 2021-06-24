@@ -46,11 +46,10 @@ import java.util.Vector;
 
 import javax.net.ssl.SSLSocketFactory;
 
-import util.ExecutionEnvironment;
-import util.Logger;
-import util.TimeoutListener;
-import util.TimeoutTime;
-import util.TimoutNotificator;
+import za.ac.uct.cs.powerqope.util.ExecutionEnvironment;
+import za.ac.uct.cs.powerqope.util.TimeoutListener;
+import za.ac.uct.cs.powerqope.util.TimeoutTime;
+import za.ac.uct.cs.powerqope.util.TimoutNotificator;
 
 
  public class Connection implements TimeoutListener {
