@@ -69,7 +69,6 @@ public class DNSFilterManager extends ConfigurationAccess  {
 	private static DNSFilterManager INSTANCE = new DNSFilterManager();
 
 	static public boolean debug;
-	static public String WORKDIR = "";
 	private static String filterReloadURL;
 	private static boolean filterHostsFileRemoveDuplicates;
 	private static String filterhostfile;
@@ -247,15 +246,25 @@ public class DNSFilterManager extends ConfigurationAccess  {
 		}
 		return config;
 	}
-
+	private String getPath() {
+		return ExecutionEnvironment.getEnvironment().getWorkDir()+File.separator;
+	}
 	@Override
 	public byte[] readConfig() throws ConfigurationAccessException{
 
-		File propsFile = new File(WORKDIR + "conf");
+		File propsFile = new File(getPath() + "dnsfilter.conf");
+		if (!propsFile.exists())  {
+			// check if data migration is needed and run migration
+			try {
+				ExecutionEnvironment.getEnvironment().migrateConfig();
+			} catch (IOException e) {
+				Log.e(TAG, e.toString());
+			}
+		}
 		if (!propsFile.exists()) {
 			Log.i(TAG,propsFile + " not found! - Creating default config!");
 			createDefaultConfiguration();
-			propsFile = new File(WORKDIR + "conf");
+			propsFile = new File(getPath() + "dnsfilter.conf");
 		}
 		try {
 			InputStream in = new FileInputStream(propsFile);
@@ -263,7 +272,7 @@ public class DNSFilterManager extends ConfigurationAccess  {
 			in.close();
 
 			// check for additionalHosts.txt
-			File f = new File(WORKDIR+"additionalHosts.txt");
+			File f = new File(getPath()+"additionalHosts.txt");
 			if (!f.exists()) {
 				f.createNewFile();
 				FileOutputStream fout = new FileOutputStream(f);
@@ -272,7 +281,7 @@ public class DNSFilterManager extends ConfigurationAccess  {
 			}
 
 			//check versions, in case different merge existing configuration with defaults
-			File versionFile = new File(WORKDIR+"VERSION.TXT");
+			File versionFile = new File(getPath()+"VERSION.TXT");
 			String vStr = "";
 			if (versionFile.exists()) {
 				InputStream vin = new FileInputStream(versionFile);
@@ -304,8 +313,8 @@ public class DNSFilterManager extends ConfigurationAccess  {
 		currentConfig.load(new ByteArrayInputStream(currentCfgStr.getBytes()));
 
 		String[] currentKeys = currentConfig.keySet().toArray(new String[0]);
-		BufferedReader defCfgReader = new BufferedReader(new InputStreamReader(ExecutionEnvironment.getEnvironment().getAsset("conf")));
-		File mergedConfig = new File(WORKDIR+"conf");
+		BufferedReader defCfgReader = new BufferedReader(new InputStreamReader(ExecutionEnvironment.getEnvironment().getAsset("dnsfilter.conf")));
+		File mergedConfig = new File(getPath()+"dnsfilter.conf");
 		FileOutputStream mergedout = new FileOutputStream(mergedConfig);
 		String ln = "";
 
@@ -330,7 +339,7 @@ public class DNSFilterManager extends ConfigurationAccess  {
 
 		//take over custom properties (such as filter overrules) which are not in def config
 		Properties defProps = new Properties();
-		defProps.load(ExecutionEnvironment.getEnvironment().getAsset("conf"));
+		defProps.load(ExecutionEnvironment.getEnvironment().getAsset("dnsfilter.conf"));
 		boolean first = true;
 		for (int i = 0; i < currentKeys.length; i++) {
 			if (!defProps.containsKey(currentKeys[i])) {
@@ -343,7 +352,7 @@ public class DNSFilterManager extends ConfigurationAccess  {
 		}
 		mergedout.flush();
 		mergedout.close();
-		Log.i(TAG,"Merged configuration 'conf' after update to version " + DNSFilterManager.VERSION + "!");
+		Log.i(TAG,"Merged configuration 'dnsfilter.conf' after update to version " + DNSFilterManager.VERSION + "!");
 		InputStream in = new FileInputStream(mergedConfig);
 		byte[] configBytes = Util.readFully(in, 1024);
 		in.close();
@@ -354,18 +363,18 @@ public class DNSFilterManager extends ConfigurationAccess  {
 
 	private void createDefaultConfiguration() {
 		try {
-			File f = new File(WORKDIR+".");
+			File f = new File(getPath()+".");
 			f.mkdir();
 
 			//con f
-			copyFromAssets("conf", "conf");
+			copyFromAssets("dnsfilter.conf", "dnsfilter.conf");
 
 			//additionalHosts.txt
-			if (!new File(WORKDIR+"additionalHosts.txt").exists())
+			if (!new File(getPath()+"additionalHosts.txt").exists())
 				copyFromAssets("additionalHosts.txt", "additionalHosts.txt");
 
 			//VERSION.TXT
-			f = new File(WORKDIR+"VERSION.TXT");
+			f = new File(getPath()+"VERSION.TXT");
 			f.createNewFile();
 			OutputStream fout = new FileOutputStream(f);
 
@@ -385,7 +394,7 @@ public class DNSFilterManager extends ConfigurationAccess  {
 	@Override
 	public void updateConfig(byte[] config) throws IOException {
 		try {
-			FileOutputStream out = new FileOutputStream(WORKDIR + "conf");
+			FileOutputStream out = new FileOutputStream(getPath() + "dnsfilter.conf");
 			out.write(config);
 			out.flush();
 			out.close();
@@ -402,7 +411,7 @@ public class DNSFilterManager extends ConfigurationAccess  {
 	@Override
 	public byte[] getAdditionalHosts(int limit) throws IOException {
 		try {
-			File additionalHosts = new File(WORKDIR + "additionalHosts.txt");
+			File additionalHosts = new File(getPath() + "additionalHosts.txt");
 			if (additionalHosts.length() > limit)
 				return null;
 
@@ -418,7 +427,7 @@ public class DNSFilterManager extends ConfigurationAccess  {
 	@Override
 	public void updateAdditionalHosts(byte[] bytes) throws IOException {
 		try {
-			FileOutputStream out = new FileOutputStream(WORKDIR + "additionalHosts.txt");
+			FileOutputStream out = new FileOutputStream(getPath() + "additionalHosts.txt");
 			out.write(bytes);
 			out.flush();
 			out.close();
@@ -443,14 +452,14 @@ public class DNSFilterManager extends ConfigurationAccess  {
 	}
 
 	private void copyLocalFile(String from, String to) throws IOException {
-		File fromFile = new File(WORKDIR  + from);
-		File toFile = new File(WORKDIR  + to);
+		File fromFile = new File(getPath()  + from);
+		File toFile = new File(getPath()  + to);
 		Util.copyFile(fromFile, toFile);
 	}
 
 	@Override
 	public String[] getAvailableBackups() throws IOException {
-		File file = new File(WORKDIR+"backup");
+		File file = new File(getPath()+"backup");
 		String[] names = new String[0];
 		if (file.exists())
 			names = file.list();
@@ -459,7 +468,7 @@ public class DNSFilterManager extends ConfigurationAccess  {
 
 		for(String name : names)
 		{
-			if (new File(WORKDIR+"backup/" + name).isDirectory())
+			if (new File(getPath()+"backup/" + name).isDirectory())
 				result.add(name);
 		}
 		Collections.sort(result);
@@ -470,7 +479,7 @@ public class DNSFilterManager extends ConfigurationAccess  {
 	@Override
 	public void doBackup(String name) throws IOException {
 		try {
-			copyLocalFile("conf", "backup/"+name+"/conf");
+			copyLocalFile("dnsfilter.conf", "backup/"+name+"/dnsfilter.conf");
 			copyLocalFile("additionalHosts.txt", "backup/"+name+"/additionalHosts.txt");
 			copyLocalFile("VERSION.TXT", "backup/"+name+"/VERSION.TXT");
 		} catch (IOException e) {
@@ -481,7 +490,7 @@ public class DNSFilterManager extends ConfigurationAccess  {
 	private void copyFromAssets(String from, String to) throws IOException {
 
 		InputStream defIn = ExecutionEnvironment.getEnvironment().getAsset(from);
-		File toFile = new File((WORKDIR + to));
+		File toFile = new File((getPath() + to));
 		toFile.getParentFile().mkdirs();
 		FileOutputStream out = new FileOutputStream(toFile);
 		Util.copyFully(defIn, out, true);
@@ -495,13 +504,13 @@ public class DNSFilterManager extends ConfigurationAccess  {
 				throw new IOException("Cannot stop! Pending operation!");
 
 			stop();
-			copyFromAssets("conf", "conf");
+			copyFromAssets("dnsfilter.conf", "dnsfilter.conf");
 			copyFromAssets("additionalHosts.txt", "additionalHosts.txt");
 
 			//cleanup hostsfile and index in order to force reload
 			String filterHostFile = null;
 			if (config != null && ((filterHostFile = config.getProperty("filterHostsFile")) != null)) {
-				new File(WORKDIR + filterHostFile).delete();
+				new File(getPath() + filterHostFile).delete();
 			}
 			init();
 			ExecutionEnvironment.getEnvironment().onReload();
@@ -518,14 +527,14 @@ public class DNSFilterManager extends ConfigurationAccess  {
 				throw new IOException("Cannot stop! Pending operation!");
 
 			stop();
-			copyLocalFile("backup/"+name+"/conf", "conf");
+			copyLocalFile("backup/"+name+"/dnsfilter.conf", "dnsfilter.conf");
 			copyLocalFile("backup/"+name+"/additionalHosts.txt", "additionalHosts.txt");
 			copyLocalFile("backup/"+name+"/VERSION.TXT", "VERSION.TXT");
 
 			//cleanup hostsfile and index in order to force reload
 			String filterHostFile = null;
 			if (config != null && ((filterHostFile = config.getProperty("filterHostsFile")) != null)) {
-				new File(WORKDIR + filterHostFile).delete();
+				new File(getPath() + filterHostFile).delete();
 			}
 			init();
 			ExecutionEnvironment.getEnvironment().onReload();
@@ -564,7 +573,7 @@ public class DNSFilterManager extends ConfigurationAccess  {
 
 
 	private void writeDownloadInfoFile(int count, long lastModified) throws IOException{
-		FileOutputStream entryCountOut = new FileOutputStream(WORKDIR +filterhostfile+".DLD_CNT");
+		FileOutputStream entryCountOut = new FileOutputStream(getPath() +filterhostfile+".DLD_CNT");
 		entryCountOut.write((count + "\n").getBytes());
 		entryCountOut.write((lastModified + "\n").getBytes());
 		entryCountOut.flush();
@@ -577,7 +586,7 @@ public class DNSFilterManager extends ConfigurationAccess  {
 				updatingFilter = true;
 				ExecutionEnvironment.getEnvironment().wakeLock(); //ensure device stays awake until filter update is completed
 
-				OutputStream out = new FileOutputStream(WORKDIR + filterhostfile + ".tmp");
+				OutputStream out = new FileOutputStream(getPath() + filterhostfile + ".tmp");
 				out.write((DOWNLOADED_FF_PREFIX + new Date() + "from URLs: " + filterReloadURL + "\n").getBytes());
 
 				StringTokenizer urlTokens = new StringTokenizer(filterReloadURL, ";");
@@ -668,12 +677,12 @@ public class DNSFilterManager extends ConfigurationAccess  {
 				out.flush();
 				out.close();
 
-				File ffile = new File(WORKDIR + filterhostfile);
+				File ffile = new File(getPath() + filterhostfile);
 
 				if (!ffile.exists() || ffile.delete()) {
 
-					new File(WORKDIR + filterhostfile + ".tmp").renameTo(new File(WORKDIR + filterhostfile));
-					writeDownloadInfoFile(count, new File(WORKDIR + filterhostfile).lastModified());
+					new File(getPath() + filterhostfile + ".tmp").renameTo(new File(getPath() + filterhostfile));
+					writeDownloadInfoFile(count, new File(getPath() + filterhostfile).lastModified());
 				} else
 					throw new IOException("Renaming downloaded .tmp file to filter file failed!");
 
@@ -796,9 +805,9 @@ public class DNSFilterManager extends ConfigurationAccess  {
 				updatingFilter = true;
 
 				Log.i(TAG,"Reading filter file and building index...!");
-				File filterfile = new File(WORKDIR + filterhostfile);
-				File additionalHosts = new File(WORKDIR + "additionalHosts.txt");
-				File indexFile = new File(WORKDIR + filterhostfile + ".idx");
+				File filterfile = new File(getPath() + filterhostfile);
+				File additionalHosts = new File(getPath() + "additionalHosts.txt");
+				File indexFile = new File(getPath() + filterhostfile + ".idx");
 				BufferedReader fin = new BufferedReader(new InputStreamReader(new FileInputStream(filterfile)));
 				BufferedReader addHostIn = new BufferedReader(new InputStreamReader(new FileInputStream(additionalHosts)));
 
@@ -814,7 +823,7 @@ public class DNSFilterManager extends ConfigurationAccess  {
 					// try to read the info about number of downloaded entries
 
 					try {
-						File downloadInfoFile = new File(WORKDIR + filterhostfile + ".DLD_CNT");
+						File downloadInfoFile = new File(getPath() + filterhostfile + ".DLD_CNT");
 						if (downloadInfoFile.exists()) {
 							InputStream in = new BufferedInputStream(new FileInputStream(downloadInfoFile));
 							byte[] info = new byte[1024];
@@ -887,7 +896,7 @@ public class DNSFilterManager extends ConfigurationAccess  {
 
 				fin = new BufferedReader(new InputStreamReader(new FileInputStream(filterfile)));
 				addHostIn = new BufferedReader(new InputStreamReader(new FileInputStream(additionalHosts)));
-				File uniqueEntriyFile = new File(WORKDIR + "uniqueentries.tmp");
+				File uniqueEntriyFile = new File(getPath() + "uniqueentries.tmp");
 				BufferedOutputStream fout = null;
 
 				if (filterHostsFileRemoveDuplicates) {
@@ -949,7 +958,7 @@ public class DNSFilterManager extends ConfigurationAccess  {
 					uniqueEntriyFile.renameTo(filterfile);
 					if (skipFFprep){
 						//filterFile was changed (unique entries) =>Update Download Info File
-						writeDownloadInfoFile(ffileCount, new File(WORKDIR + filterhostfile).lastModified());
+						writeDownloadInfoFile(ffileCount, new File(getPath() + filterhostfile).lastModified());
 					}
 				}
 
@@ -961,7 +970,7 @@ public class DNSFilterManager extends ConfigurationAccess  {
 					Log.i(TAG,"Persisting index for " + size + " entries...!");
 					Log.i(TAG,"Index contains " + uniqueEntries + " unique entries!");
 
-					hostFilterSet.persist(WORKDIR + filterhostfile + ".idx");
+					hostFilterSet.persist(getPath() + filterhostfile + ".idx");
 					hostFilterSet.clear(); //release memory
 
 					hostFilterSet = BlockedHosts.loadPersistedIndex(indexFile.getAbsolutePath(), false, okCacheSize, filterListCacheSize, hostsFilterOverRule); //loads only file handles not the whole structure.
@@ -992,9 +1001,9 @@ public class DNSFilterManager extends ConfigurationAccess  {
 		try {
 			ExecutionEnvironment.getEnvironment().wakeLock(); //ensure device stays awake until filter reload is completed
 
-			File filterfile = new File(WORKDIR + filterhostfile);
-			File downloadInfoFile = new File(WORKDIR + filterhostfile + ".DLD_CNT");
-			File additionalHosts = new File(WORKDIR + "additionalHosts.txt");
+			File filterfile = new File(getPath() + filterhostfile);
+			File downloadInfoFile = new File(getPath() + filterhostfile + ".DLD_CNT");
+			File additionalHosts = new File(getPath() + "additionalHosts.txt");
 			if (!additionalHosts.exists())
 				additionalHosts.createNewFile();
 
@@ -1005,7 +1014,7 @@ public class DNSFilterManager extends ConfigurationAccess  {
 			} else
 				nextReload = 0; // reload asap
 
-			File indexFile = new File(WORKDIR + filterhostfile + ".idx");
+			File indexFile = new File(getPath() + filterhostfile + ".idx");
 			if (indexFile.exists() && validIndex && BlockedHosts.checkIndexVersion(indexFile.getAbsolutePath())) {
 				hostFilter = BlockedHosts.loadPersistedIndex(indexFile.getAbsolutePath(), false, okCacheSize, filterListCacheSize, hostsFilterOverRule);
 				if (needRedloadAdditionalHosts && filterfile.exists() && nextReload != 0) {
@@ -1027,7 +1036,7 @@ public class DNSFilterManager extends ConfigurationAccess  {
 	private void updateIndexReloadInfoConfFile(String url, String additionalHosts_lastImportTS) {
 		try {
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(WORKDIR + "conf")));
+			BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(getPath() + "dnsfilter.conf")));
 			String ln;
 			boolean found1 = false;
 			boolean found2 = false;
@@ -1048,7 +1057,7 @@ public class DNSFilterManager extends ConfigurationAccess  {
 
 			out.flush();
 			reader.close();
-			OutputStream fout = new FileOutputStream(WORKDIR + "conf");
+			OutputStream fout = new FileOutputStream(getPath() + "dnsfilter.conf");
 			fout.write(out.toByteArray());
 			fout.flush();
 			fout.close();
@@ -1090,8 +1099,8 @@ public class DNSFilterManager extends ConfigurationAccess  {
 				}
 
 				// update additional hosts file
-				File additionalHosts = new File(WORKDIR + "additionalHosts.txt");
-				File additionalHostsNew = new File(WORKDIR + "additionalHosts.txt.tmp");
+				File additionalHosts = new File(getPath() + "additionalHosts.txt");
+				File additionalHostsNew = new File(getPath() + "additionalHosts.txt.tmp");
 
 				BufferedReader addHostIn = new BufferedReader(new InputStreamReader(new FileInputStream(additionalHosts)));
 				BufferedWriter addHostOut = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(additionalHostsNew)));
@@ -1284,7 +1293,7 @@ public class DNSFilterManager extends ConfigurationAccess  {
 			initEnv();
 
 			Log.i(TAG,"***Initializing personalDNSfilter Version " + VERSION + "!***");
-			Log.i(TAG,"Using directory: "+WORKDIR);
+			Log.i(TAG,"Using directory: "+getPath());
 
 			byte[] configBytes = readConfig();
 			config = new Properties();
@@ -1323,7 +1332,7 @@ public class DNSFilterManager extends ConfigurationAccess  {
 			try {
 
 				if (config.getProperty("enableTrafficLog", "true").equalsIgnoreCase("true")) {
-					TRAFFIC_LOG = new FileLogger(WORKDIR + "log",
+					TRAFFIC_LOG = new FileLogger(getPath() + "log",
 							config.getProperty("trafficLogName", "trafficlog"),
 							Integer.parseInt(config.getProperty("trafficLogSize", "1048576").trim()),
 							Integer.parseInt(config.getProperty("trafficLogSlotCount", "2").trim()),
@@ -1366,7 +1375,7 @@ public class DNSFilterManager extends ConfigurationAccess  {
 				int localTTL = Integer.parseInt(config.getProperty("localResolverTTL", "60"));
 				DNSResolver.initLocalResolver(null, enableLocalResolver, localTTL);
 
-				File additionalHosts = new File(WORKDIR + "additionalHosts.txt");
+				File additionalHosts = new File(getPath() + "additionalHosts.txt");
 				if (additionalHosts.exists()) {
 					BufferedReader addHostIn = new BufferedReader(new InputStreamReader(new FileInputStream(additionalHosts)));
 					String entry = null;

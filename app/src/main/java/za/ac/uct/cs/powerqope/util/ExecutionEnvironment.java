@@ -50,6 +50,11 @@ package za.ac.uct.cs.powerqope.util;
 	 }
 
 	 @Override
+	 public String getEnvironmentVersion() {
+		 return System.getProperty("java.version");
+	 }
+
+	 @Override
 	public void wakeLock() {
 		// by default do nothing
 		
@@ -71,11 +76,6 @@ package za.ac.uct.cs.powerqope.util;
 	}
 
 	@Override
-	public boolean debug()  {
-		return false;
-	}
-
-	@Override
 	public void onReload() throws IOException {}
 
 	 @Override
@@ -91,6 +91,11 @@ package za.ac.uct.cs.powerqope.util;
 	 @Override
 	 public boolean protectSocket(Object socket, int type) {
 		return true;
+	 }
+
+	 @Override
+	 public void migrateConfig() throws IOException {
+		 // nothing to migrate by default
 	 }
 
  }

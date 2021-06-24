@@ -55,13 +55,16 @@ import java.net.NetworkInterface;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.Vector;
+import java.util.stream.Collectors;
 
 
+import za.ac.uct.cs.powerqope.AndroidEnvironment;
 import za.ac.uct.cs.powerqope.MainActivity;
 import za.ac.uct.cs.powerqope.R;
 import za.ac.uct.cs.powerqope.ip.IPPacket;
@@ -218,7 +221,7 @@ public class DNSFilterService extends VpnService {
 
     }
 
-    protected static boolean protectSocket(Object socket, int type) {
+    public static boolean protectSocket(Object socket, int type) {
 
         DNSFilterService instance = INSTANCE;
 
@@ -441,7 +444,6 @@ public class DNSFilterService extends VpnService {
 
         } else
             Log.i(TAG, "DNS detection via ConnectivityManager");
-
         return dnsServers;
     }
 
@@ -641,7 +643,7 @@ public class DNSFilterService extends VpnService {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        MainActivity.initEnvironment(this);
+        AndroidEnvironment.initEnvironment(this);
         INSTANCE = this;
         SERVICE = intent;
 

@@ -231,13 +231,13 @@ public class DNSResolver implements Runnable {
 			String msg = e.getMessage();
 			if (e.getMessage()==null)
 				msg = e.toString();
-			if (ExecutionEnvironment.getEnvironment().debug())
-				Log.i(TAG,msg);
-			else if (!IO_ERROR && hasNetwork) {
+			if (!IO_ERROR && hasNetwork) {
 				// a new IO Error while connected occured
 				Log.i(TAG, msg+"\nIO Error occured! Check network or DNS config!");
 				IO_ERROR= true; //prevent repeating error logs
 			}
+			else
+				Log.i(TAG,msg);
 		} catch (Exception e) {
 			Log.e(TAG, ""+e);
 		} finally {

@@ -49,8 +49,8 @@ public class DNSCommunicator {
 
 	public synchronized void setDNSServers(DNSServer[] newDNSServers) throws IOException {
 
-		if (newDNSServers.length > 20)
-			throw new IOException ("Too many DNS servers configured - Add max 20!");
+		if (newDNSServers.length > 40)
+			throw new IOException ("Too many DNS servers configured - Add max 40!");
 
 		dnsServers = newDNSServers;
 		if (dnsServers.length > 0) {
@@ -61,8 +61,7 @@ public class DNSCommunicator {
 			lastDNS = "";
 			curDNS = -1;
 		}
-		if (ExecutionEnvironment.getEnvironment().debug())
-			Log.i(TAG,"Using updated DNS servers!");
+		Log.i(TAG,"Using updated DNS servers!");
 	}
 
 	private void setFastestDNSFromServers(final boolean acceptCurrent)  {
@@ -239,8 +238,7 @@ public class DNSCommunicator {
 		if (current == getCurrentDNS()) {  //might have been switched by other thread already
 			//curDNS = (curDNS + 1) % dnsServers.length;
 			setFastestDNSFromServers(false);
-			if (ExecutionEnvironment.getEnvironment().debug())
-				Log.i(TAG,"Switched DNS server to:" + getCurrentDNS().getAddress().getHostAddress());
+			Log.i(TAG,"Switched DNS server to:" + getCurrentDNS().getAddress().getHostAddress());
 		}
 	}
 

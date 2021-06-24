@@ -82,8 +82,7 @@ public class BlockedHosts implements Set {
 		okCache = new LRUCache(okCacheSize);
 		filterListCache = new LRUCache(filterListCacheSize);
 
-		if (ExecutionEnvironment.getEnvironment().debug())
-			Log.i(TAG, "CACHE SIZE:"+okCacheSize+", "+filterListCacheSize);
+		Log.i(TAG, "CACHE SIZE:"+okCacheSize+", "+filterListCacheSize);
 
 		this.hostsFilterOverRule = hostsFilterOverRule;
 
@@ -100,8 +99,7 @@ public class BlockedHosts implements Set {
 		okCache = new LRUCache(okCacheSize);
 		filterListCache = new LRUCache(filterListCacheSize);
 
-		if (ExecutionEnvironment.getEnvironment().debug())
-			Log.i(TAG, "CACHE SIZE:"+okCacheSize+", "+filterListCacheSize);
+		Log.i(TAG, "CACHE SIZE:"+okCacheSize+", "+filterListCacheSize);
 
 		this.hostsFilterOverRule = hostsFilterOverRule;
 	}

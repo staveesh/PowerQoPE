@@ -87,21 +87,6 @@ public class DNSFilterProxy implements Runnable {
 			boolean debug = false;
 			boolean debugInit = false;
 
-			
-			@Override
-			public boolean debug() {
-				if (!debugInit) {
-					try {
-						debug = Boolean.parseBoolean(DNSFilterManager.getInstance().getConfig().getProperty("debug", "false"));
-					} catch (IOException e) {
-						Log.e(TAG, e.getMessage());
-					}
-					debugInit=true;
-				}
-					
-				return debug;
-			}
-
 			@Override
 			public void onReload() {
 				DNSFilterProxy.initDNS(DNSFilterManager.getInstance());
@@ -115,7 +100,6 @@ public class DNSFilterProxy implements Runnable {
 		}
 		
 		ExecutionEnvironment.setEnvironment(new StandaloneEnvironment());
-		DNSFilterManager.WORKDIR = ExecutionEnvironment.getEnvironment().getWorkDir();
 		
 		DNSFilterManager filtermgr = DNSFilterManager.getInstance();
 		filtermgr.init();

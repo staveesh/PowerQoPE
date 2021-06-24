@@ -13,6 +13,7 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.VpnService;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
@@ -20,6 +21,7 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
@@ -89,15 +91,6 @@ public class MainActivity extends AppCompatActivity {
             bindService(intent, serviceConn, Context.BIND_AUTO_CREATE);
             isBindingToService = true;
         }
-    }
-
-    public static void initEnvironment(Context context) {
-        if (android.os.Build.VERSION.SDK_INT >= 19) {
-            context.getExternalFilesDirs(null); //Seems on some devices this has to be called once before accessing Files...
-            WORKDIR = context.getExternalFilesDirs (null)[0].getAbsolutePath() + "/DNSFilter";
-        }
-        else
-            WORKDIR= Environment.getExternalStorageDirectory().getAbsolutePath() + "/DNSFilter";
     }
 
     public static void reloadLocalConfig() {
@@ -174,6 +167,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         app = this;
         setContentView(R.layout.activity_main);
+        AndroidEnvironment.initEnvironment(this);
         BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
         bottomNav.setOnNavigationItemSelectedListener(navListener);
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new ConfigureFragment()).commit();
@@ -229,6 +223,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if(grantResults.length >0 ){
+            boolean allPermissionsGranted = true;
+            for(int i = 0; i < grantResults.length; i++) {
+                if (grantResults[i] == PackageManager.PERMISSION_DENIED)
+                    allPermissionsGranted = false;
+            }
+            if(allPermissionsGranted)
+                loadAndApplyConfig(true);
+        }
+        else {
+            if (grantResults.length == 0)
+                Log.e(TAG, "grantResults is empty - Assuming permission denied!");
+            System.exit(-1);
+        }
+    }
+
+    @Override
     protected void onStop() {
         super.onStop();
         if (isBound) {
@@ -268,18 +281,21 @@ public class MainActivity extends AppCompatActivity {
     private void requestPermissions() {
         if ((ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE)
                 + ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-                + ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION))
+                + ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                + ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE))
                 != PackageManager.PERMISSION_GRANTED) {
             if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
                     Manifest.permission.READ_PHONE_STATE) ||
                     ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
                             Manifest.permission.ACCESS_COARSE_LOCATION) ||
                     ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
-                            Manifest.permission.ACCESS_FINE_LOCATION)
+                            Manifest.permission.ACCESS_FINE_LOCATION) ||
+                    ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE)
             ) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                 builder.setTitle("Please grant the following permissions");
-                builder.setMessage("Read phone state, Access location");
+                builder.setMessage("Read phone state, Access location, Access Storage");
                 builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
@@ -287,7 +303,8 @@ public class MainActivity extends AppCompatActivity {
                                 new String[]{
                                         Manifest.permission.READ_PHONE_STATE,
                                         Manifest.permission.ACCESS_FINE_LOCATION,
-                                        Manifest.permission.ACCESS_COARSE_LOCATION
+                                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                                        Manifest.permission.WRITE_EXTERNAL_STORAGE
                                 },
                                 PERMISSIONS_REQUEST_CODE
                         );
@@ -301,7 +318,8 @@ public class MainActivity extends AppCompatActivity {
                         new String[]{
                                 Manifest.permission.READ_PHONE_STATE,
                                 Manifest.permission.ACCESS_FINE_LOCATION,
-                                Manifest.permission.ACCESS_COARSE_LOCATION
+                                Manifest.permission.ACCESS_COARSE_LOCATION,
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE
                         },
                         PERMISSIONS_REQUEST_CODE
                 );

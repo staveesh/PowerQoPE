@@ -26,15 +26,16 @@ package za.ac.uct.cs.powerqope.util;
  import java.io.InputStream;
 
  public interface ExecutionEnvironmentInterface {
-	
-	public int getEnvironmentID();
- 	public void wakeLock();
-	public void releaseWakeLock();
-	public void releaseAllWakeLocks();
-	public String getWorkDir();
-	public boolean debug();
-	public void onReload()  throws IOException;
-	public InputStream getAsset(String path) throws IOException;
-	public boolean hasNetwork();
-	public boolean protectSocket(Object socket, int type);
+
+	 public int getEnvironmentID();
+	 public String getEnvironmentVersion();
+	 public void wakeLock();
+	 public void releaseWakeLock();
+	 public void releaseAllWakeLocks();
+	 public String getWorkDir();
+	 public void onReload()  throws IOException;
+	 public InputStream getAsset(String path) throws IOException;
+	 public boolean hasNetwork();
+	 public boolean protectSocket(Object socket, int type);
+	 public void migrateConfig() throws IOException;
 }
