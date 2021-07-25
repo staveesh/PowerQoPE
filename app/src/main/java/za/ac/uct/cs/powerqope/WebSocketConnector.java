@@ -10,6 +10,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -27,6 +31,7 @@ import okhttp3.OkHttpClient;
 import ua.naiksoftware.stomp.Stomp;
 import ua.naiksoftware.stomp.StompClient;
 import ua.naiksoftware.stomp.dto.StompHeader;
+import za.ac.uct.cs.powerqope.dns.ConfigurationAccess;
 import za.ac.uct.cs.powerqope.util.MeasurementJsonConvertor;
 import za.ac.uct.cs.powerqope.util.Util;
 
@@ -39,6 +44,7 @@ public class WebSocketConnector {
     private StompClient mStompClient;
     private CompositeDisposable compositeDisposable;
     private static WebSocketConnector instance;
+    private ConfigurationAccess CONFIG = ConfigurationAccess.getLocal();
 
     private WebSocketConnector() {
     }
@@ -97,10 +103,46 @@ public class WebSocketConnector {
         });
     }
 
+    private void modifyConfig(JSONObject filter, JSONObject cipher){
+        try {
+            boolean changed = false;
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            String ln;
+
+            switch (filter.getString("type")){
+                case "dot":
+
+                    break;
+            }
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(CONFIG.readConfig())));
+            while ((ln = reader.readLine()) != null) {
+                String old = ln;
+
+                if (ln.trim().startsWith("detectDNS"))
+                    ln = "detectDNS = " + false;
+
+                else if(ln.trim().startsWith("fallbackDNS"))
+                    ln = "fallbackDNS = ";
+            }
+        } catch (Exception e){
+            Log.e(TAG, "persistConfig: "+e.getMessage());
+        }
+    }
+
     private Disposable subscribeToSecurityConfig(){
         String deviceId = getDeviceId();
         return subscribeToTopic(String.format(Config.STOMP_SERVER_CONFIG_RESPONSE_ENDPOINT, deviceId), result -> {
-            Log.i(TAG, "subscribeToSecurityConfig: "+result.getPayload());
+            try {
+                JSONObject config = new JSONObject(result.getPayload());
+                JSONObject filter = config.getJSONObject("filter");
+                JSONObject cipher = config.getJSONObject("cipher");
+                // Write filter to file
+//                modifyConfig();
+            } catch (JSONException e) {
+                Log.e(TAG, "subscribeToSecurityConfig: Error parsing JSON from server");
+            }
+
         });
     }
 
