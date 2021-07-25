@@ -1,17 +1,55 @@
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <PreferenceCategory app:title="VPN">
-
+    <PreferenceCategory
+        app:key="vpn_settings"
+        app:title="VPN Settings">
+        <SwitchPreferenceCompat
+            app:key="enable_vpn"
+            app:title="Enable VPN" />
+        <SwitchPreferenceCompat
+            app:key="auto_connect_vpn"
+            app:title="Auto connect" />
         <Preference
-            app:fragment="za.ac.uct.cs.powerqope.VPNSettingsFragment"
-            app:title="VPN Settings" />
-
+            app:key="auto_connect_vpn"
+            app:summary="Choose when your VPN automatically connects or disconnects"
+            app:selectable="false"
+            app:persistent="false"/>
+        <CheckBoxPreference
+            app:key="unsecured_wifi"
+            app:title="Unsecured WiFi"
+            app:defaultValue="false"/>
+        <CheckBoxPreference
+            app:key="any_wifi"
+            app:title="Any WiFi"
+            app:defaultValue="false"/>
+        <CheckBoxPreference
+            app:key="any_wifi_cellular"
+            app:title="Any Wifi or Cellular data"
+            app:defaultValue="false"/>
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="Filtering">
-        <Preference
-            app:fragment="za.ac.uct.cs.powerqope.FilteringSettingsFragment"
-            app:title="Filtering Settings" />
+    <PreferenceCategory
+        app:key="filter_settings"
+        app:title="Filtering Settings">
+        <SwitchPreferenceCompat
+            app:key="enable_filters"
+            app:title="Enable Filtering"/>
+        <CheckBoxPreference
+            app:key="security_filter"
+            app:title="Security Filter"
+            app:defaultValue="false"/>
+        <CheckBoxPreference
+            app:key="security_family_filter"
+            app:title="Security+Family Filter"
+            app:defaultValue="false"/>
+        <CheckBoxPreference
+            app:key="ads_filter"
+            app:title="Ads Filter"
+            app:defaultValue="false"/>
+        <CheckBoxPreference
+            app:key="all_filters"
+            app:title="Security Filter"
+            app:defaultValue="false"/>
     </PreferenceCategory>
 
 </PreferenceScreen>

@@ -28,6 +28,7 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
+import java.security.Security;
 import java.util.Properties;
 
 import za.ac.uct.cs.powerqope.MeasurementScheduler.SchedulerBinder;
@@ -171,6 +172,15 @@ public class MainActivity extends AppCompatActivity {
         BottomNavigationView bottomNav = findViewById(R.id.bottom_nav);
         bottomNav.setOnNavigationItemSelectedListener(navListener);
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new ConfigureFragment()).commit();
+
+        /* Set the DNS cache TTL to 0 such that measurements can be more accurate.
+         * However, it is known that the current Android OS does not take actions
+         * on these properties but may enforce them in future versions.
+         */
+        System.setProperty("networkaddress.cache.ttl", "0");
+        System.setProperty("networkaddress.cache.negative.ttl", "0");
+        Security.setProperty("networkaddress.cache.ttl", "0");
+        Security.setProperty("networkaddress.cache.negative.ttl", "0");
 
         statusBar = findViewById(R.id.systemStatusBar);
         statsBar = findViewById(R.id.systemStatsBar);

@@ -86,9 +86,9 @@ public interface Config {
 
 
     /** Constants to access the server **/
-    String SERVER_ADDRESS="192.168.1.77";
+    String SERVER_ADDRESS="192.168.42.70";
     int SERVER_PORT=7800;
-    String SERVER_HOST_ADDRESS = "192.168.1.77";
+    String SERVER_HOST_ADDRESS = "192.168.42.70";
     /** Enum for all the permissions that we need*/
     enum PERMISSION_IDS {
         INTERNET, GET_ACCOUNTS, READ_PHONE_STATE, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, WAKE_LOCK, RECEIVE_BOOT_COMPLETED, ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION
@@ -99,4 +99,6 @@ public interface Config {
     String STOMP_SERVER_CONNECT_ENDPOINT = "/powerqope";
     String STOMP_SERVER_JOB_RESULT_ENDPOINT = "/device/job-result";
     String STOMP_SERVER_TASKS_ENDPOINT = "/user/%s/queue/jobs";
+    String STOMP_SERVER_CONFIG_REQUEST_ENDPOINT = "/device/security-config";
+    String STOMP_SERVER_CONFIG_RESPONSE_ENDPOINT = "/user/%s/queue/best-config";
 }

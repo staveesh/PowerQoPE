@@ -62,6 +62,7 @@ public class DNSCommunicator {
 			curDNS = -1;
 		}
 		Log.i(TAG,"Using updated DNS servers!");
+		Log.i(TAG, "Current DNS server : "+lastDNS);
 	}
 
 	private void setFastestDNSFromServers(final boolean acceptCurrent)  {

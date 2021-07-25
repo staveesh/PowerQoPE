@@ -63,6 +63,7 @@ public class WebSocketConnector {
     private List<Disposable> getSubscriptions(){
         return new ArrayList<Disposable>(){{
             add(subscribeToNewJobs());
+            add(subscribeToSecurityConfig());
         }};
     }
 
@@ -93,6 +94,13 @@ public class WebSocketConnector {
             }
             scheduler.updateSchedule(tasksFromServer, false);
             scheduler.handleMeasurement();
+        });
+    }
+
+    private Disposable subscribeToSecurityConfig(){
+        String deviceId = getDeviceId();
+        return subscribeToTopic(String.format(Config.STOMP_SERVER_CONFIG_RESPONSE_ENDPOINT, deviceId), result -> {
+            Log.i(TAG, "subscribeToSecurityConfig: "+result.getPayload());
         });
     }
 
