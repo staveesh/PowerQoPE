@@ -1,10 +1,15 @@
 package za.ac.uct.cs.powerqope;
 
 import android.annotation.SuppressLint;
+import android.app.admin.DevicePolicyManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.provider.Settings;
 import android.util.Log;
+
+import androidx.annotation.RequiresApi;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -108,13 +113,23 @@ public class WebSocketConnector {
             boolean changed = false;
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             String ln;
-
-            switch (filter.getString("type")){
+            String filterValue;
+            switch (filter.getString("dnsType")){
                 case "dot":
+                    filterValue = filter.getString("ipAddress")+"::853::DoT";
+                    break;
+                case "doh":
+                    String url = filter.getString("url");
+                    if(url.contains("https")){
+                        url = url.substring(7);
+                    }
+                    filterValue = filter.getString("ipAddress")+"::443::DoH::"+filter.getString("url");
 
                     break;
+                default:
+                    filterValue = filter.getString("ipAddress");
+                    break;
             }
-
             BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(CONFIG.readConfig())));
             while ((ln = reader.readLine()) != null) {
                 String old = ln;
@@ -123,8 +138,24 @@ public class WebSocketConnector {
                     ln = "detectDNS = " + false;
 
                 else if(ln.trim().startsWith("fallbackDNS"))
-                    ln = "fallbackDNS = ";
+                    ln = "fallbackDNS = "+filterValue;
+
+                else if(ln.trim().startsWith("cipher"))
+                    ln = "cipher = "+cipher.getString("tlsVersion")+"::"+cipher.getString("name");
+
+                out.write((ln + "\r\n").getBytes());
+
+                changed = changed || !old.equals(ln);
             }
+
+            reader.close();
+            out.flush();
+            out.close();
+
+            if (changed) {
+                CONFIG.updateConfig(out.toByteArray());
+            }
+
         } catch (Exception e){
             Log.e(TAG, "persistConfig: "+e.getMessage());
         }
@@ -138,7 +169,7 @@ public class WebSocketConnector {
                 JSONObject filter = config.getJSONObject("filter");
                 JSONObject cipher = config.getJSONObject("cipher");
                 // Write filter to file
-//                modifyConfig();
+                modifyConfig(filter, cipher);
             } catch (JSONException e) {
                 Log.e(TAG, "subscribeToSecurityConfig: Error parsing JSON from server");
             }

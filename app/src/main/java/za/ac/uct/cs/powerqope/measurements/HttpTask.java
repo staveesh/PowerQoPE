@@ -19,6 +19,7 @@ import android.content.Context;
 import android.net.http.AndroidHttpClient;
 import android.util.Base64;
 
+import okhttp3.OkHttpClient;
 import za.ac.uct.cs.powerqope.Config;
 import za.ac.uct.cs.powerqope.Logger;
 import za.ac.uct.cs.powerqope.MeasurementDesc;
@@ -53,6 +54,7 @@ import java.util.Map;
  * A Callable class that performs download throughput test using HTTP get
  */
 public class HttpTask extends MeasurementTask {
+
   // Type name for internal use
   public static final String TYPE = "http";
   // Human readable name for the task

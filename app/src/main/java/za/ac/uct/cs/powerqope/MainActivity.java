@@ -13,12 +13,9 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.VpnService;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
-import android.util.TypedValue;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -39,7 +36,6 @@ import za.ac.uct.cs.powerqope.util.Util;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
-
     TextView statusBar, statsBar;
 
     private static MainActivity app;
@@ -336,6 +332,8 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+
 
     private void initializeStatusBar() {
         if (this.scheduler.isPauseRequested()) {

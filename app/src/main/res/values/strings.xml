@@ -122,4 +122,6 @@
     <string name="notificationActive">Active</string>
     <string name="notificationPaused">Paused</string>
     <string name="switch_pause_resume">Tap to switch</string>
+    <string name="admin_desc">Allow application to change DNS settings</string>
+    <string name="admin_label">DNS Settings permission</string>
 </resources>

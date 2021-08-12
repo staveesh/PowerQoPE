@@ -400,8 +400,7 @@ public class DNSFilterManager extends ConfigurationAccess  {
 			out.close();
 
 			this.config.load(new ByteArrayInputStream(config));
-
-			Log.i(TAG,"Config changed!\nRestart might be required!");
+			restart();
 			//only update in file system / config instance will be updated with next restart
 		} catch (IOException e) {
 			throw new ConfigurationAccessException(e.getMessage(), e);

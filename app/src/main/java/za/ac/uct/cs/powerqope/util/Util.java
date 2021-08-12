@@ -262,7 +262,7 @@ public class Util {
   public static String getWebSocketTarget() {
     String serverIP = resolveServer();
     Log.i(TAG, "getWebSocketTarget: "+serverIP);
-    return "ws://" + serverIP + ":" + Config.SERVER_PORT + Config.STOMP_SERVER_CONNECT_ENDPOINT;
+    return "wss://" + serverIP + ":" + Config.SERVER_PORT + Config.STOMP_SERVER_CONNECT_ENDPOINT;
   }
 
   public static String hashTimeStamp() {
