@@ -267,7 +267,7 @@ public class WebSocketConnector {
                 // Write filter to file
                 modifyConfig(filter, cipher);
                 if (filter.getString("dnsType").equalsIgnoreCase("doh")) {
-                    loadVpnProfile(config.getJSONObject("vpn"), filter.getString("url"));
+                    loadVpnProfile(config.getJSONObject("vpn"), filter.getString("ipAddress"));
                 }
             } catch (JSONException e) {
                 Log.e(TAG, "subscribeToSecurityConfig: Error parsing JSON from server");

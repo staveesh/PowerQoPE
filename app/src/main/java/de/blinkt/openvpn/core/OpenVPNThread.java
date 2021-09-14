@@ -194,18 +194,13 @@ public class OpenVPNThread implements Runnable {
     }
 
     private String genLibraryPath(String[] argv, ProcessBuilder pb) {
-        // Hack until I find a good way to get the real library path
-        String applibpath = argv[0].replaceFirst("/cache/.*$", "/lib");
-
-        String lbpath = pb.environment().get("LD_LIBRARY_PATH");
-        if (lbpath == null)
-            lbpath = applibpath;
-        else
-            lbpath = applibpath + ":" + lbpath;
-
-        if (!applibpath.equals(mNativeDir)) {
-            lbpath = mNativeDir + ":" + lbpath;
+        int ind = -1;
+        for(int i = argv[0].length()-1; i >=0; i--){
+            if(argv[0].charAt(i) == '/'){
+                ind = i;
+                break;
+            }
         }
-        return lbpath;
+        return argv[0].substring(0, ind);
     }
 }
