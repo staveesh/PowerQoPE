@@ -13,6 +13,7 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.VpnService;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -28,6 +29,9 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import java.security.Security;
 import java.util.Properties;
 
+import de.blinkt.openvpn.VpnProfile;
+import de.blinkt.openvpn.core.OpenVPNService;
+import de.blinkt.openvpn.core.VPNLaunchHelper;
 import za.ac.uct.cs.powerqope.MeasurementScheduler.SchedulerBinder;
 import za.ac.uct.cs.powerqope.dns.ConfigurationAccess;
 import za.ac.uct.cs.powerqope.dns.DNSFilterService;
@@ -35,6 +39,7 @@ import za.ac.uct.cs.powerqope.util.Util;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final int START_REMOTE_VPN_PROFILE = 70;
     private static final String TAG = "MainActivity";
     TextView statusBar, statsBar;
 
@@ -49,6 +54,10 @@ public class MainActivity extends AppCompatActivity {
     protected static ConfigurationAccess CONFIG = ConfigurationAccess.getLocal();
     protected static Properties config = null;
     protected static boolean switchingConfig = false;
+    private static OpenVPNService remoteVPNService;
+    private static VpnProfile remoteVpnProfile;
+    private boolean remoteVpnEnabled = false;
+    private boolean isBoundRemoteVpnService = false;
 
     private ServiceConnection serviceConn = new ServiceConnection() {
         @Override
@@ -72,6 +81,19 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    private ServiceConnection vpnConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            OpenVPNService.LocalBinder binder = (OpenVPNService.LocalBinder) service;
+            remoteVPNService = binder.getService();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            remoteVPNService = null;
+        }
+    };
+
     public MeasurementScheduler getScheduler() {
         if (isBound) {
             return this.scheduler;
@@ -79,6 +101,14 @@ public class MainActivity extends AppCompatActivity {
             bindToService();
             return null;
         }
+    }
+
+    public static VpnProfile getRemoteVpnProfile() {
+        return remoteVpnProfile;
+    }
+
+    public static void setRemoteVpnProfile(VpnProfile remoteVpnProfile) {
+        MainActivity.remoteVpnProfile = remoteVpnProfile;
     }
 
     private void bindToService() {
@@ -105,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
                 startup();
 
         } else
-            switchingConfig =false;
+            switchingConfig = false;
     }
 
     protected void startup() {
@@ -115,21 +145,29 @@ public class MainActivity extends AppCompatActivity {
             Log.i(TAG, "Filter statistic since last restart:");
             return;
         }
-
+        String secLevel = getConfig().getProperty("secLevel", "default");
         try {
-            boolean vpnInAdditionToProxyMode = Boolean.parseBoolean(getConfig().getProperty("vpnInAdditionToProxyMode", "false"));
-            boolean vpnDisabled = !vpnInAdditionToProxyMode && Boolean.parseBoolean(getConfig().getProperty("dnsProxyOnAndroid", "false"));
-            Intent intent = null;
-            if (!vpnDisabled)
-                intent = VpnService.prepare(this.getApplicationContext());
+            remoteVpnEnabled = secLevel.equalsIgnoreCase("high");
+            Intent intent = VpnService.prepare(this.getApplicationContext());
             if (intent != null) {
-                startActivityForResult(intent, 0);
-            } else { //already prepared or VPN disabled
-                startDNSSvc();
+                if(remoteVpnEnabled){
+                    startActivityForResult(intent, START_REMOTE_VPN_PROFILE);
+                }
+                else {
+                    startActivityForResult(intent, 0);
+                }
+            } else {//already prepared or VPN disabled
+                if(remoteVpnEnabled)
+                    startRemoteVpnSvc();
+                else
+                    startDNSSvc();
             }
         } catch (NullPointerException e) { // NullPointer might occur on Android 4.4 when VPN already initialized
             Log.i(TAG, "Seems we are on Android 4.4 or older!");
-            startDNSSvc(); // assume it is ok!
+            if(remoteVpnEnabled)
+                startRemoteVpnSvc();
+            else
+                startDNSSvc();
         } catch (Exception e) {
             Log.e(TAG, e.getMessage());
         }
@@ -140,10 +178,14 @@ public class MainActivity extends AppCompatActivity {
         startService(new Intent(this, DNSFilterService.class));
     }
 
+    private void startRemoteVpnSvc(){
+        VPNLaunchHelper.startOpenVpn(remoteVpnProfile, getBaseContext());
+    }
+
     protected Properties getConfig() {
         try {
             return CONFIG.getConfig();
-        } catch (Exception e){
+        } catch (Exception e) {
             Log.e(TAG, e.toString());
             return null;
         }
@@ -156,6 +198,10 @@ public class MainActivity extends AppCompatActivity {
             startDNSSvc();
         } else if (requestCode == 0 && resultCode != Activity.RESULT_OK) {
             Log.e(TAG, "VPN dialog not accepted!\r\nPress restart to display dialog again!");
+        } else if(requestCode == START_REMOTE_VPN_PROFILE && resultCode == Activity.RESULT_OK){
+            startRemoteVpnSvc();
+        } else if (requestCode == START_REMOTE_VPN_PROFILE && resultCode != Activity.RESULT_OK) {
+            Log.e(TAG, "Remote VPN couldn't start!\r\nPlease try again.");
         }
     }
 
@@ -181,7 +227,7 @@ public class MainActivity extends AppCompatActivity {
         statusBar = findViewById(R.id.systemStatusBar);
         statsBar = findViewById(R.id.systemStatsBar);
 
-        if(target == null) {
+        if (target == null) {
             target = Util.getWebSocketTarget();
             SharedPreferences prefs = getSharedPreferences(Config.PREF_KEY_RESOLVED_TARGET, MODE_PRIVATE);
             SharedPreferences.Editor editor = prefs.edit();
@@ -190,7 +236,7 @@ public class MainActivity extends AppCompatActivity {
             WebSocketConnector webSocketConnector = WebSocketConnector.getInstance();
             WebSocketConnector.setContext(getBaseContext());
             WebSocketConnector.setScheduler(getScheduler());
-            if(!webSocketConnector.isConnected())
+            if (!webSocketConnector.isConnected())
                 webSocketConnector.connectWebSocket(target);
         }
 
@@ -224,23 +270,29 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         bindToService();
+        bindToRemoteVpnService();
         requestPermissions();
         super.onStart();
+    }
+
+    private void bindToRemoteVpnService() {
+        Intent intent = new Intent(this, OpenVPNService.class);
+        intent.setAction(OpenVPNService.START_SERVICE);
+        isBoundRemoteVpnService = bindService(intent, vpnConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if(grantResults.length >0 ){
+        if (grantResults.length > 0) {
             boolean allPermissionsGranted = true;
-            for(int i = 0; i < grantResults.length; i++) {
+            for (int i = 0; i < grantResults.length; i++) {
                 if (grantResults[i] == PackageManager.PERMISSION_DENIED)
                     allPermissionsGranted = false;
             }
-            if(allPermissionsGranted)
+            if (allPermissionsGranted)
                 loadAndApplyConfig(true);
-        }
-        else {
+        } else {
             if (grantResults.length == 0)
                 Log.e(TAG, "grantResults is empty - Assuming permission denied!");
             System.exit(-1);
@@ -254,6 +306,10 @@ public class MainActivity extends AppCompatActivity {
             unbindService(serviceConn);
             isBound = false;
         }
+        if (isBoundRemoteVpnService) {
+            isBoundRemoteVpnService = false;
+            unbindService(vpnConnection);
+        }
     }
 
     @Override
@@ -265,7 +321,7 @@ public class MainActivity extends AppCompatActivity {
 
     private final BottomNavigationView.OnNavigationItemSelectedListener navListener = item -> {
         Fragment selectedFragment = null;
-        switch (item.getItemId()){
+        switch (item.getItemId()) {
             case R.id.configure:
                 selectedFragment = new ConfigureFragment();
                 break;
@@ -319,7 +375,7 @@ public class MainActivity extends AppCompatActivity {
                 builder.setNegativeButton("Cancel", null);
                 AlertDialog alertDialog = builder.create();
                 alertDialog.show();
-            } else{
+            } else {
                 ActivityCompat.requestPermissions(MainActivity.this,
                         new String[]{
                                 Manifest.permission.READ_PHONE_STATE,
@@ -332,7 +388,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
 
 
     private void initializeStatusBar() {
